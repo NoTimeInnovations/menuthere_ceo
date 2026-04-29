@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
@@ -46,13 +46,32 @@ import {
 } from "@radix-ui/react-icons";
 
 const ALL = "__all__";
+const STATUS_FILTER_KEY = "customers:statusFilter";
 
 export function CustomersPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>(ALL);
+  const [statusFilter, setStatusFilter] = useState<string>(() => {
+    if (typeof window === "undefined") return ALL;
+    return window.localStorage.getItem(STATUS_FILTER_KEY) ?? ALL;
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem(STATUS_FILTER_KEY, statusFilter);
+  }, [statusFilter]);
 
   const statuses = useQuery(api.statuses.list);
+  const knownStatusIds = statuses?.map((s) => s._id);
+  useEffect(() => {
+    if (
+      statusFilter !== ALL &&
+      knownStatusIds &&
+      !knownStatusIds.includes(statusFilter as Id<"statuses">)
+    ) {
+      setStatusFilter(ALL);
+    }
+  }, [statusFilter, knownStatusIds]);
+
   const customers = useQuery(api.customers.list, {
     search: search || undefined,
     statusId:
@@ -151,10 +170,10 @@ export function CustomersPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Added</TableHead>
+              <TableHead className="w-[180px]">Name</TableHead>
+              <TableHead className="w-[140px]">Phone</TableHead>
+              <TableHead className="w-[160px]">Status</TableHead>
+              <TableHead>Latest remark</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -170,8 +189,8 @@ export function CustomersPage() {
                   <TableCell>
                     <Skeleton className="h-5 w-20 rounded-full" />
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Skeleton className="ml-auto h-4 w-16" />
+                  <TableCell>
+                    <Skeleton className="h-4 w-full" />
                   </TableCell>
                 </TableRow>
               ))}
@@ -180,18 +199,24 @@ export function CustomersPage() {
               customers?.map((c) => (
                 <TableRow
                   key={c._id}
-                  className="cursor-pointer hover:bg-muted/50"
+                  className="cursor-pointer hover:bg-muted/50 align-top"
                   onClick={() => navigate(`/customers/${c._id}`)}
                 >
                   <TableCell className="font-medium">{c.name}</TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="text-muted-foreground whitespace-nowrap">
                     {c.phone}
                   </TableCell>
                   <TableCell>
                     <StatusBadge status={c.status} />
                   </TableCell>
-                  <TableCell className="text-right text-muted-foreground">
-                    {new Date(c._creationTime).toLocaleDateString()}
+                  <TableCell className="text-sm text-muted-foreground">
+                    {c.latestRemark ? (
+                      <p className="whitespace-pre-wrap break-words leading-relaxed">
+                        {c.latestRemark.text}
+                      </p>
+                    ) : (
+                      <span className="italic">No remarks yet</span>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

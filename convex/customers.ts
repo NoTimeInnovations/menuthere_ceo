@@ -4,6 +4,7 @@ import { Doc } from "./_generated/dataModel";
 
 export type CustomerWithStatus = Doc<"customers"> & {
   status: Doc<"statuses"> | null;
+  latestRemark: Doc<"remarks"> | null;
 };
 
 export const list = query({
@@ -35,10 +36,20 @@ export const list = query({
 
     const statuses = await ctx.db.query("statuses").collect();
     const statusMap = new Map(statuses.map((s) => [s._id, s]));
-    return customers.map((c) => ({
-      ...c,
-      status: statusMap.get(c.statusId) ?? null,
-    }));
+    return Promise.all(
+      customers.map(async (c) => {
+        const latestRemark = await ctx.db
+          .query("remarks")
+          .withIndex("by_customer", (q) => q.eq("customerId", c._id))
+          .order("desc")
+          .first();
+        return {
+          ...c,
+          status: statusMap.get(c.statusId) ?? null,
+          latestRemark,
+        };
+      }),
+    );
   },
 });
 
