@@ -10,26 +10,46 @@ export type CustomerWithStatus = Doc<"customers"> & {
 export const list = query({
   args: {
     search: v.optional(v.string()),
-    statusId: v.optional(v.id("statuses")),
+    statusIds: v.optional(v.array(v.id("statuses"))),
   },
-  handler: async (ctx, { search, statusId }) => {
+  handler: async (ctx, { search, statusIds }) => {
     let customers: Doc<"customers">[];
+    const filterSet = statusIds && statusIds.length > 0 ? new Set(statusIds) : null;
 
     const trimmed = search?.trim();
     if (trimmed && trimmed.length > 0) {
-      customers = await ctx.db
+      const onlyStatusId = filterSet && filterSet.size === 1 ? statusIds![0] : null;
+      const found = await ctx.db
         .query("customers")
         .withSearchIndex("search_name", (q) => {
           const base = q.search("name", trimmed);
-          return statusId ? base.eq("statusId", statusId) : base;
+          return onlyStatusId ? base.eq("statusId", onlyStatusId) : base;
         })
         .take(200);
-    } else if (statusId) {
-      customers = await ctx.db
-        .query("customers")
-        .withIndex("by_status", (q) => q.eq("statusId", statusId))
-        .order("desc")
-        .take(200);
+      customers =
+        filterSet && !onlyStatusId
+          ? found.filter((c) => filterSet.has(c.statusId))
+          : found;
+    } else if (filterSet) {
+      const lists = await Promise.all(
+        [...filterSet].map((id) =>
+          ctx.db
+            .query("customers")
+            .withIndex("by_status", (q) => q.eq("statusId", id))
+            .order("desc")
+            .take(200),
+        ),
+      );
+      const seen = new Set<string>();
+      customers = lists
+        .flat()
+        .filter((c) => {
+          if (seen.has(c._id)) return false;
+          seen.add(c._id);
+          return true;
+        })
+        .sort((a, b) => b._creationTime - a._creationTime)
+        .slice(0, 200);
     } else {
       customers = await ctx.db.query("customers").order("desc").take(200);
     }

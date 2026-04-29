@@ -10,13 +10,13 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -43,49 +43,73 @@ import {
   Cross2Icon,
   PersonIcon,
   MixerHorizontalIcon,
+  CaretDownIcon,
 } from "@radix-ui/react-icons";
 
-const ALL = "__all__";
-const STATUS_FILTER_KEY = "customers:statusFilter";
+const STATUS_FILTER_KEY = "customers:statusFilters";
+
+function loadInitialStatusFilters(): string[] {
+  if (typeof window === "undefined") return [];
+  const raw = window.localStorage.getItem(STATUS_FILTER_KEY);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((v) => typeof v === "string") : [];
+  } catch {
+    return [];
+  }
+}
 
 export function CustomersPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>(() => {
-    if (typeof window === "undefined") return ALL;
-    return window.localStorage.getItem(STATUS_FILTER_KEY) ?? ALL;
-  });
+  const [statusFilters, setStatusFilters] = useState<string[]>(loadInitialStatusFilters);
 
   useEffect(() => {
-    window.localStorage.setItem(STATUS_FILTER_KEY, statusFilter);
-  }, [statusFilter]);
+    window.localStorage.setItem(STATUS_FILTER_KEY, JSON.stringify(statusFilters));
+  }, [statusFilters]);
 
   const statuses = useQuery(api.statuses.list);
-  const knownStatusIds = statuses?.map((s) => s._id);
   useEffect(() => {
-    if (
-      statusFilter !== ALL &&
-      knownStatusIds &&
-      !knownStatusIds.includes(statusFilter as Id<"statuses">)
-    ) {
-      setStatusFilter(ALL);
+    if (!statuses || statusFilters.length === 0) return;
+    const known = new Set(statuses.map((s) => s._id));
+    const pruned = statusFilters.filter((id) => known.has(id as Id<"statuses">));
+    if (pruned.length !== statusFilters.length) {
+      setStatusFilters(pruned);
     }
-  }, [statusFilter, knownStatusIds]);
+  }, [statuses, statusFilters]);
 
   const customers = useQuery(api.customers.list, {
     search: search || undefined,
-    statusId:
-      statusFilter !== ALL ? (statusFilter as Id<"statuses">) : undefined,
+    statusIds:
+      statusFilters.length > 0
+        ? (statusFilters as Id<"statuses">[])
+        : undefined,
   });
 
   const isLoading = customers === undefined;
   const isEmpty = customers !== undefined && customers.length === 0;
-  const filterActive = search.trim().length > 0 || statusFilter !== ALL;
+  const filterActive = search.trim().length > 0 || statusFilters.length > 0;
+
+  function toggleStatus(id: string) {
+    setStatusFilters((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
 
   function clearFilters() {
     setSearch("");
-    setStatusFilter(ALL);
+    setStatusFilters([]);
   }
+
+  const filterLabel = (() => {
+    if (statusFilters.length === 0) return "All statuses";
+    if (statusFilters.length === 1) {
+      const s = statuses?.find((x) => x._id === statusFilters[0]);
+      return s?.name ?? "1 status";
+    }
+    return `${statusFilters.length} statuses`;
+  })();
 
   return (
     <div className="flex flex-col gap-6">
@@ -121,27 +145,49 @@ export function CustomersPage() {
             )}
           </InputGroup>
 
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="sm:w-56">
-              <SelectValue placeholder="All statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value={ALL}>All statuses</SelectItem>
-                {statuses?.map((s) => (
-                  <SelectItem key={s._id} value={s._id}>
-                    <span className="inline-flex items-center gap-2">
-                      <span
-                        className="size-2 rounded-full"
-                        style={{ backgroundColor: s.color }}
-                      />
-                      {s.name}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="sm:w-56 justify-between font-normal"
+              >
+                <span className="truncate">{filterLabel}</span>
+                <CaretDownIcon className="ml-2 shrink-0 opacity-60" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuLabel>Filter by status</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {statuses?.map((s) => (
+                <DropdownMenuCheckboxItem
+                  key={s._id}
+                  checked={statusFilters.includes(s._id)}
+                  onCheckedChange={() => toggleStatus(s._id)}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      className="size-2 rounded-full"
+                      style={{ backgroundColor: s.color }}
+                    />
+                    {s.name}
+                  </span>
+                </DropdownMenuCheckboxItem>
+              ))}
+              {statusFilters.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <button
+                    type="button"
+                    onClick={() => setStatusFilters([])}
+                    className="w-full px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-sm"
+                  >
+                    Clear selection
+                  </button>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {filterActive && (
             <Button variant="ghost" size="sm" onClick={clearFilters}>
