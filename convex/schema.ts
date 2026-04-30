@@ -12,8 +12,10 @@ export default defineSchema({
     name: v.string(),
     phone: v.string(),
     statusId: v.id("statuses"),
+    priority: v.optional(v.number()),
   })
     .index("by_status", ["statusId"])
+    .index("by_priority", ["priority"])
     .searchIndex("search_name", {
       searchField: "name",
       filterFields: ["statusId"],

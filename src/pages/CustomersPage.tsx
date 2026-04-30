@@ -37,6 +37,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/StatusBadge";
 import { NewCustomerDialog } from "@/components/NewCustomerDialog";
 import { ManageStatusesDialog } from "@/components/ManageStatusesDialog";
+import { PriorityDialog } from "@/components/PriorityDialog";
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -44,6 +45,7 @@ import {
   PersonIcon,
   MixerHorizontalIcon,
   CaretDownIcon,
+  DragHandleDots2Icon,
 } from "@radix-ui/react-icons";
 
 const STATUS_FILTER_KEY = "customers:statusFilters";
@@ -197,6 +199,12 @@ export function CustomersPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <PriorityDialog>
+            <Button variant="outline">
+              <DragHandleDots2Icon data-icon="inline-start" />
+              Priority
+            </Button>
+          </PriorityDialog>
           <ManageStatusesDialog>
             <Button variant="outline">
               <MixerHorizontalIcon data-icon="inline-start" />
