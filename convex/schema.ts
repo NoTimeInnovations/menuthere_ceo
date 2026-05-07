@@ -13,6 +13,10 @@ export default defineSchema({
     phone: v.string(),
     statusId: v.id("statuses"),
     priority: v.optional(v.number()),
+    playStore: v.optional(v.string()),
+    appStore: v.optional(v.string()),
+    cashfree: v.optional(v.string()),
+    posIntegration: v.optional(v.string()),
   })
     .index("by_status", ["statusId"])
     .index("by_priority", ["priority"])

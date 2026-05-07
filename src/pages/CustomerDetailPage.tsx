@@ -36,6 +36,7 @@ import { TimelineItem } from "@/components/TimelineItem";
 import { AddRemarkForm } from "@/components/AddRemarkForm";
 import { ChangeStatusDialog } from "@/components/ChangeStatusDialog";
 import { EditCustomerDialog } from "@/components/EditCustomerDialog";
+import { TrackingCard } from "@/components/TrackingCard";
 import {
   ArrowLeftIcon,
   Pencil1Icon,
@@ -157,6 +158,8 @@ export function CustomerDetailPage() {
           </div>
         </CardHeader>
       </Card>
+
+      <TrackingCard customer={customer} />
 
       <Card>
         <CardHeader>

@@ -213,6 +213,33 @@ export const changeStatus = mutation({
   },
 });
 
+const TRACKING_KEY = v.union(
+  v.literal("playStore"),
+  v.literal("appStore"),
+  v.literal("cashfree"),
+  v.literal("posIntegration"),
+);
+
+const TRACKING_STATUS = v.union(
+  v.literal("not_started"),
+  v.literal("not_needed"),
+  v.literal("pending"),
+  v.literal("review"),
+  v.literal("error"),
+  v.literal("done"),
+);
+
+export const setTracking = mutation({
+  args: {
+    id: v.id("customers"),
+    key: TRACKING_KEY,
+    value: TRACKING_STATUS,
+  },
+  handler: async (ctx, { id, key, value }) => {
+    await ctx.db.patch(id, { [key]: value });
+  },
+});
+
 export const remove = mutation({
   args: { id: v.id("customers") },
   handler: async (ctx, { id }) => {

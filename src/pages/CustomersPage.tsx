@@ -35,6 +35,8 @@ import {
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/StatusBadge";
+import { TrackingStatusBadge } from "@/components/TrackingStatusBadge";
+import { TRACKING_ITEMS } from "@/lib/tracking";
 import { NewCustomerDialog } from "@/components/NewCustomerDialog";
 import { ManageStatusesDialog } from "@/components/ManageStatusesDialog";
 import { PriorityDialog } from "@/components/PriorityDialog";
@@ -226,7 +228,7 @@ export function CustomersPage() {
             <TableRow>
               <TableHead className="w-[180px]">Name</TableHead>
               <TableHead className="w-[140px]">Phone</TableHead>
-              <TableHead className="w-[160px]">Status</TableHead>
+              <TableHead className="w-[260px]">Status</TableHead>
               <TableHead>Latest remark</TableHead>
             </TableRow>
           </TableHeader>
@@ -261,7 +263,18 @@ export function CustomersPage() {
                     {c.phone}
                   </TableCell>
                   <TableCell>
-                    <StatusBadge status={c.status} />
+                    <div className="flex flex-col gap-1.5">
+                      <StatusBadge status={c.status} />
+                      {TRACKING_ITEMS.map(({ key, label }) => (
+                        <div
+                          key={key}
+                          className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap"
+                        >
+                          <span>{label}:</span>
+                          <TrackingStatusBadge value={c[key]} />
+                        </div>
+                      ))}
+                    </div>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {c.latestRemark ? (
