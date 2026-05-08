@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
@@ -53,6 +53,7 @@ import {
 import { Link } from "react-router-dom";
 
 const STATUS_FILTER_KEY = "customers:statusFilters";
+const SCROLL_KEY = "customers:scrollY";
 
 function loadInitialStatusFilters(): string[] {
   if (typeof window === "undefined") return [];
@@ -64,6 +65,14 @@ function loadInitialStatusFilters(): string[] {
   } catch {
     return [];
   }
+}
+
+function loadSavedScrollY(): number | null {
+  if (typeof window === "undefined") return null;
+  const raw = window.localStorage.getItem(SCROLL_KEY);
+  if (!raw) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
 export function CustomersPage() {
@@ -96,6 +105,40 @@ export function CustomersPage() {
   const isLoading = customers === undefined;
   const isEmpty = customers !== undefined && customers.length === 0;
   const filterActive = search.trim().length > 0 || statusFilters.length > 0;
+
+  const scrollRestoredRef = useRef(false);
+
+  useEffect(() => {
+    if (scrollRestoredRef.current) return;
+    if (customers === undefined) return;
+    const saved = loadSavedScrollY();
+    if (saved == null || saved === 0) {
+      scrollRestoredRef.current = true;
+      return;
+    }
+    const id = window.requestAnimationFrame(() => {
+      window.scrollTo({ top: saved, behavior: "auto" });
+      scrollRestoredRef.current = true;
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [customers]);
+
+  useEffect(() => {
+    let frame = 0;
+    const handler = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        if (!scrollRestoredRef.current) return;
+        window.localStorage.setItem(SCROLL_KEY, String(window.scrollY));
+      });
+    };
+    window.addEventListener("scroll", handler, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handler);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
 
   function toggleStatus(id: string) {
     setStatusFilters((prev) =>
