@@ -37,6 +37,7 @@ import { AddRemarkForm } from "@/components/AddRemarkForm";
 import { ChangeStatusDialog } from "@/components/ChangeStatusDialog";
 import { EditCustomerDialog } from "@/components/EditCustomerDialog";
 import { TrackingCard } from "@/components/TrackingCard";
+import { TodosSection } from "@/components/TodosSection";
 import {
   ArrowLeftIcon,
   Pencil1Icon,
@@ -160,6 +161,8 @@ export function CustomerDetailPage() {
       </Card>
 
       <TrackingCard customer={customer} />
+
+      <TodosSection customerId={customer._id} />
 
       <Card>
         <CardHeader>

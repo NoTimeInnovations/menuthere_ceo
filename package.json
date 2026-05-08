@@ -7,7 +7,8 @@
     "dev": "convex dev --start \"vite --open\"",
     "dev:convex": "convex dev",
     "dev:web": "vite --open",
-    "build": "tsc -b && vite build",
+    "build": "convex deploy --cmd 'npm run build:web'",
+    "build:web": "tsc -b && vite build",
     "lint": "tsc && eslint .  --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },

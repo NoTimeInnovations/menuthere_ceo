@@ -70,10 +70,18 @@ export const list = query({
           .withIndex("by_customer", (q) => q.eq("customerId", c._id))
           .order("desc")
           .first();
+        const todos = await ctx.db
+          .query("todos")
+          .withIndex("by_customer", (q) => q.eq("customerId", c._id))
+          .collect();
+        const pending = todos.filter((t) => !t.done);
         return {
           ...c,
           status: statusMap.get(c.statusId) ?? null,
           latestRemark,
+          totalTodos: todos.length,
+          pendingTodos: pending.length,
+          pendingTodoTexts: pending.slice(0, 5).map((t) => t.text),
         };
       }),
     );
@@ -249,6 +257,13 @@ export const remove = mutation({
       .collect();
     for (const r of remarks) {
       await ctx.db.delete(r._id);
+    }
+    const todos = await ctx.db
+      .query("todos")
+      .withIndex("by_customer", (q) => q.eq("customerId", id))
+      .collect();
+    for (const t of todos) {
+      await ctx.db.delete(t._id);
     }
     await ctx.db.delete(id);
   },

@@ -30,4 +30,10 @@ export default defineSchema({
     text: v.string(),
     statusIdAtTime: v.optional(v.id("statuses")),
   }).index("by_customer", ["customerId"]),
+
+  todos: defineTable({
+    customerId: v.id("customers"),
+    text: v.string(),
+    done: v.boolean(),
+  }).index("by_customer", ["customerId"]),
 });

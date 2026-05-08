@@ -48,7 +48,9 @@ import {
   MixerHorizontalIcon,
   CaretDownIcon,
   DragHandleDots2Icon,
+  CheckboxIcon,
 } from "@radix-ui/react-icons";
+import { Link } from "react-router-dom";
 
 const STATUS_FILTER_KEY = "customers:statusFilters";
 
@@ -117,11 +119,19 @@ export function CustomersPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-semibold tracking-tight">Customers</h2>
-        <p className="text-sm text-muted-foreground">
-          Track every customer, status and remark in one place.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-2xl font-semibold tracking-tight">Customers</h2>
+          <p className="text-sm text-muted-foreground">
+            Track every customer, status and remark in one place.
+          </p>
+        </div>
+        <Button variant="outline" asChild>
+          <Link to="/todos">
+            <CheckboxIcon data-icon="inline-start" />
+            Todos
+          </Link>
+        </Button>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -277,13 +287,50 @@ export function CustomersPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {c.latestRemark ? (
-                      <p className="whitespace-pre-wrap break-words leading-relaxed">
-                        {c.latestRemark.text}
-                      </p>
-                    ) : (
-                      <span className="italic">No remarks yet</span>
-                    )}
+                    <div className="flex flex-col gap-2">
+                      {c.latestRemark ? (
+                        <p className="whitespace-pre-wrap break-words leading-relaxed">
+                          {c.latestRemark.text}
+                        </p>
+                      ) : (
+                        <span className="italic">No remarks yet</span>
+                      )}
+                      <div className="flex flex-col gap-1 border-t pt-2">
+                        <span className="text-xs font-medium text-foreground">
+                          Todos:{" "}
+                          {c.totalTodos === 0 ? (
+                            <span className="font-normal text-muted-foreground italic">
+                              none
+                            </span>
+                          ) : (
+                            <span className="font-normal text-muted-foreground">
+                              {c.pendingTodos} pending · {c.totalTodos} total
+                            </span>
+                          )}
+                        </span>
+                        {c.pendingTodoTexts.length > 0 && (
+                          <ul className="flex flex-col gap-0.5 pl-1">
+                            {c.pendingTodoTexts.map((t, i) => (
+                              <li
+                                key={i}
+                                className="flex gap-1.5 text-xs text-muted-foreground"
+                              >
+                                <span aria-hidden>•</span>
+                                <span className="whitespace-pre-wrap break-words">
+                                  {t}
+                                </span>
+                              </li>
+                            ))}
+                            {c.pendingTodos > c.pendingTodoTexts.length && (
+                              <li className="pl-3 text-xs italic text-muted-foreground">
+                                +{c.pendingTodos - c.pendingTodoTexts.length}{" "}
+                                more
+                              </li>
+                            )}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

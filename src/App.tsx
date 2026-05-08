@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import { Layout } from "@/Layout";
 import { CustomersPage } from "@/pages/CustomersPage";
 import { CustomerDetailPage } from "@/pages/CustomerDetailPage";
+import { TodosPage } from "@/pages/TodosPage";
 import { Toaster } from "@/components/ui/sonner";
 import { SeedStatuses } from "@/components/SeedStatuses";
 
@@ -12,6 +13,7 @@ export default function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<CustomersPage />} />
+          <Route path="/todos" element={<TodosPage />} />
           <Route path="/customers/:id" element={<CustomerDetailPage />} />
         </Routes>
       </Layout>
