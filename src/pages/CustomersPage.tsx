@@ -240,6 +240,7 @@ export function CustomersPage() {
               <TableHead className="w-[140px]">Phone</TableHead>
               <TableHead className="w-[260px]">Status</TableHead>
               <TableHead>Latest remark</TableHead>
+              <TableHead className="w-[320px]">Todos</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -257,6 +258,9 @@ export function CustomersPage() {
                   </TableCell>
                   <TableCell>
                     <Skeleton className="h-4 w-full" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-10 w-full" />
                   </TableCell>
                 </TableRow>
               ))}
@@ -287,50 +291,36 @@ export function CustomersPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    <div className="flex flex-col gap-2">
-                      {c.latestRemark ? (
-                        <p className="whitespace-pre-wrap break-words leading-relaxed">
-                          {c.latestRemark.text}
-                        </p>
-                      ) : (
-                        <span className="italic">No remarks yet</span>
-                      )}
-                      <div className="flex flex-col gap-1 border-t pt-2">
-                        <span className="text-xs font-medium text-foreground">
-                          Todos:{" "}
-                          {c.totalTodos === 0 ? (
-                            <span className="font-normal text-muted-foreground italic">
-                              none
-                            </span>
-                          ) : (
-                            <span className="font-normal text-muted-foreground">
-                              {c.pendingTodos} pending · {c.totalTodos} total
-                            </span>
-                          )}
-                        </span>
-                        {c.pendingTodoTexts.length > 0 && (
-                          <ul className="flex flex-col gap-0.5 pl-1">
-                            {c.pendingTodoTexts.map((t, i) => (
-                              <li
-                                key={i}
-                                className="flex gap-1.5 text-xs text-muted-foreground"
-                              >
-                                <span aria-hidden>•</span>
-                                <span className="whitespace-pre-wrap break-words">
-                                  {t}
-                                </span>
-                              </li>
-                            ))}
-                            {c.pendingTodos > c.pendingTodoTexts.length && (
-                              <li className="pl-3 text-xs italic text-muted-foreground">
-                                +{c.pendingTodos - c.pendingTodoTexts.length}{" "}
-                                more
-                              </li>
-                            )}
-                          </ul>
-                        )}
-                      </div>
-                    </div>
+                    {c.latestRemark ? (
+                      <p className="whitespace-pre-wrap break-words leading-relaxed">
+                        {c.latestRemark.text}
+                      </p>
+                    ) : (
+                      <span className="italic">No remarks yet</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {c.todos.length === 0 ? (
+                      <span className="text-sm italic text-muted-foreground">
+                        No todos
+                      </span>
+                    ) : (
+                      <ul className="flex flex-col gap-1">
+                        {c.todos.map((t) => (
+                          <li
+                            key={t._id}
+                            className={
+                              t.done
+                                ? "flex gap-2 text-sm text-muted-foreground whitespace-pre-wrap break-words leading-snug line-through"
+                                : "flex gap-2 text-sm font-medium text-foreground whitespace-pre-wrap break-words leading-snug"
+                            }
+                          >
+                            <span aria-hidden>•</span>
+                            <span>{t.text}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

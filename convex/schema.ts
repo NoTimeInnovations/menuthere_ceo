@@ -32,7 +32,7 @@ export default defineSchema({
   }).index("by_customer", ["customerId"]),
 
   todos: defineTable({
-    customerId: v.id("customers"),
+    customerId: v.optional(v.id("customers")),
     text: v.string(),
     done: v.boolean(),
   }).index("by_customer", ["customerId"]),

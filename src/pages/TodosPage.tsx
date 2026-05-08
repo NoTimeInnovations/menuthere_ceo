@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/empty";
 import { StatusBadge } from "@/components/StatusBadge";
 import { TodoItem } from "@/components/TodoItem";
+import { AddTodoForm } from "@/components/AddTodoForm";
 import {
   ArrowLeftIcon,
   CheckboxIcon,
@@ -40,6 +41,7 @@ type Group = {
 
 export function TodosPage() {
   const all = useQuery(api.todos.listAll);
+  const extras = useQuery(api.todos.listExtras);
 
   const groups = useMemo<Group[] | null>(() => {
     if (!all) return null;
@@ -60,8 +62,13 @@ export function TodosPage() {
     );
   }, [all]);
 
-  const isLoading = all === undefined;
-  const isEmpty = all !== undefined && (groups?.length ?? 0) === 0;
+  const isLoading = all === undefined || extras === undefined;
+  const noCustomerTodos = !isLoading && (groups?.length ?? 0) === 0;
+  const noExtras = !isLoading && (extras?.length ?? 0) === 0;
+  const isEmpty = noCustomerTodos && noExtras;
+
+  const pendingExtras = extras?.filter((t) => !t.done) ?? [];
+  const doneExtras = extras?.filter((t) => t.done) ?? [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -77,7 +84,7 @@ export function TodosPage() {
       <div className="flex flex-col gap-1">
         <h2 className="text-2xl font-semibold tracking-tight">Todos</h2>
         <p className="text-sm text-muted-foreground">
-          All todos across customers, grouped by customer.
+          Extra todos and per-customer todos.
         </p>
       </div>
 
@@ -97,13 +104,43 @@ export function TodosPage() {
         </div>
       )}
 
+      {!isLoading && (
+        <Card>
+          <CardHeader>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <CardTitle className="text-base">Extra todos</CardTitle>
+              <span className="text-xs text-muted-foreground">
+                {pendingExtras.length} pending · {doneExtras.length} done
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <AddTodoForm placeholder="Add an extra todo…" />
+            {extras && extras.length > 0 ? (
+              <ul className="flex flex-col gap-2">
+                {pendingExtras.map((t) => (
+                  <TodoItem key={t._id} todo={t} />
+                ))}
+                {doneExtras.map((t) => (
+                  <TodoItem key={t._id} todo={t} />
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm italic text-muted-foreground">
+                No extra todos yet.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {isEmpty && (
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <CheckboxIcon />
             </EmptyMedia>
-            <EmptyTitle>No todos yet</EmptyTitle>
+            <EmptyTitle>No customer todos yet</EmptyTitle>
             <EmptyDescription>
               Open a customer and add a todo to see it here.
             </EmptyDescription>
@@ -137,7 +174,8 @@ export function TodosPage() {
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex flex-col gap-3">
+                  <AddTodoForm customerId={customer._id} />
                   <ul className="flex flex-col gap-2">
                     {pending.map((t) => (
                       <TodoItem key={t._id} todo={t} />

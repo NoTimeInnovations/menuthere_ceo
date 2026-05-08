@@ -74,14 +74,11 @@ export const list = query({
           .query("todos")
           .withIndex("by_customer", (q) => q.eq("customerId", c._id))
           .collect();
-        const pending = todos.filter((t) => !t.done);
         return {
           ...c,
           status: statusMap.get(c.statusId) ?? null,
           latestRemark,
-          totalTodos: todos.length,
-          pendingTodos: pending.length,
-          pendingTodoTexts: pending.slice(0, 5).map((t) => t.text),
+          todos,
         };
       }),
     );

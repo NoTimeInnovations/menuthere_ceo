@@ -7,7 +7,13 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { PlusIcon } from "@radix-ui/react-icons";
 
-export function AddTodoForm({ customerId }: { customerId: Id<"customers"> }) {
+export function AddTodoForm({
+  customerId,
+  placeholder,
+}: {
+  customerId?: Id<"customers">;
+  placeholder?: string;
+}) {
   const createTodo = useMutation(api.todos.create);
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -31,7 +37,7 @@ export function AddTodoForm({ customerId }: { customerId: Id<"customers"> }) {
   return (
     <form onSubmit={handleSubmit} className="flex items-center gap-2">
       <Input
-        placeholder="Add a todo for this customer…"
+        placeholder={placeholder ?? "Add a todo for this customer…"}
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
