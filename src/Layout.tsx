@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { DueBanner } from "@/components/DueBanner";
 
 export function Layout({ children }: { children: ReactNode }) {
   return (
@@ -16,6 +17,7 @@ export function Layout({ children }: { children: ReactNode }) {
           <ThemeToggle />
         </nav>
       </header>
+      <DueBanner />
       <main className="flex w-full grow flex-col px-6 py-8 lg:px-10">
         {children}
       </main>

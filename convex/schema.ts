@@ -13,6 +13,7 @@ export default defineSchema({
     phone: v.string(),
     statusId: v.id("statuses"),
     priority: v.optional(v.number()),
+    plan: v.optional(v.string()),
     playStore: v.optional(v.string()),
     appStore: v.optional(v.string()),
     cashfree: v.optional(v.string()),
@@ -35,5 +36,6 @@ export default defineSchema({
     customerId: v.optional(v.id("customers")),
     text: v.string(),
     done: v.boolean(),
+    dueAt: v.optional(v.number()),
   }).index("by_customer", ["customerId"]),
 });

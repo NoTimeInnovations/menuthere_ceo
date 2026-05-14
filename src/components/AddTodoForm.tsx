@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { PlusIcon } from "@radix-ui/react-icons";
+import { fromLocalInputValue, nowLocalInputValue } from "@/lib/due";
 
 export function AddTodoForm({
   customerId,
@@ -16,6 +17,7 @@ export function AddTodoForm({
 }) {
   const createTodo = useMutation(api.todos.create);
   const [text, setText] = useState("");
+  const [due, setDue] = useState<string>(nowLocalInputValue);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -24,8 +26,10 @@ export function AddTodoForm({
     if (!trimmed) return;
     setSubmitting(true);
     try {
-      await createTodo({ customerId, text: trimmed });
+      const dueAt = due ? fromLocalInputValue(due) : undefined;
+      await createTodo({ customerId, text: trimmed, dueAt });
       setText("");
+      setDue(nowLocalInputValue());
     } catch (err) {
       toast.error("Could not add todo");
       console.error(err);
@@ -35,16 +39,26 @@ export function AddTodoForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-2">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2 sm:flex-row sm:items-center">
       <Input
+        className="sm:flex-1"
         placeholder={placeholder ?? "Add a todo for this customer…"}
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
-      <Button type="submit" disabled={submitting || !text.trim()}>
-        <PlusIcon data-icon="inline-start" />
-        {submitting ? "Adding…" : "Add"}
-      </Button>
+      <div className="flex items-center gap-2">
+        <Input
+          type="datetime-local"
+          value={due}
+          onChange={(e) => setDue(e.target.value)}
+          className="sm:w-[200px]"
+          aria-label="Due date and time"
+        />
+        <Button type="submit" disabled={submitting || !text.trim()}>
+          <PlusIcon data-icon="inline-start" />
+          {submitting ? "Adding…" : "Add"}
+        </Button>
+      </div>
     </form>
   );
 }

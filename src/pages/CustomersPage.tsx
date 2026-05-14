@@ -49,8 +49,12 @@ import {
   CaretDownIcon,
   DragHandleDots2Icon,
   CheckboxIcon,
+  ClockIcon,
 } from "@radix-ui/react-icons";
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { formatDueTime, formatTimeLeft, isOverdue } from "@/lib/due";
+import { useNow } from "@/lib/useNow";
 
 const STATUS_FILTER_KEY = "customers:statusFilters";
 const SCROLL_KEY = "customers:scrollY";
@@ -77,6 +81,7 @@ function loadSavedScrollY(): number | null {
 
 export function CustomersPage() {
   const navigate = useNavigate();
+  const now = useNow();
   const [search, setSearch] = useState("");
   const [statusFilters, setStatusFilters] = useState<string[]>(loadInitialStatusFilters);
 
@@ -315,7 +320,16 @@ export function CustomersPage() {
                   className="cursor-pointer hover:bg-muted/50 align-top"
                   onClick={() => navigate(`/customers/${c._id}`)}
                 >
-                  <TableCell className="font-medium">{c.name}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex flex-col gap-0.5">
+                      <span>{c.name}</span>
+                      {c.plan && (
+                        <span className="text-xs font-normal text-muted-foreground whitespace-pre-wrap break-words">
+                          {c.plan}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-muted-foreground whitespace-nowrap">
                     {c.phone}
                   </TableCell>
@@ -349,19 +363,58 @@ export function CustomersPage() {
                       </span>
                     ) : (
                       <ul className="flex flex-col gap-1">
-                        {c.todos.map((t) => (
-                          <li
-                            key={t._id}
-                            className={
-                              t.done
-                                ? "flex gap-2 text-sm text-muted-foreground whitespace-pre-wrap break-words leading-snug line-through"
-                                : "flex gap-2 text-sm font-medium text-foreground whitespace-pre-wrap break-words leading-snug"
-                            }
-                          >
-                            <span aria-hidden>•</span>
-                            <span>{t.text}</span>
-                          </li>
-                        ))}
+                        {c.todos.map((t) => {
+                          const overdue = isOverdue(t.dueAt, t.done, now);
+                          return (
+                            <li
+                              key={t._id}
+                              className="flex flex-col gap-0.5 text-sm leading-snug"
+                            >
+                              <div className="flex gap-2">
+                                <span aria-hidden>•</span>
+                                <span
+                                  className={cn(
+                                    "whitespace-pre-wrap break-words",
+                                    t.done && "text-muted-foreground line-through",
+                                    !t.done && !overdue && "font-medium text-foreground",
+                                    overdue &&
+                                      "font-medium text-destructive underline decoration-destructive",
+                                  )}
+                                >
+                                  {t.text}
+                                </span>
+                              </div>
+                              {t.dueAt !== undefined && (
+                                <div className="flex flex-wrap items-center gap-1.5 pl-4 text-[11px]">
+                                  <span
+                                    className={cn(
+                                      "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5",
+                                      overdue
+                                        ? "border-destructive/40 bg-destructive/10 text-destructive"
+                                        : "border-border bg-muted text-muted-foreground",
+                                      t.done && "opacity-60",
+                                    )}
+                                  >
+                                    <ClockIcon className="size-3" />
+                                    {formatDueTime(t.dueAt, now)}
+                                  </span>
+                                  {!t.done && (
+                                    <span
+                                      className={cn(
+                                        "tabular-nums",
+                                        overdue
+                                          ? "text-destructive font-medium"
+                                          : "text-muted-foreground",
+                                      )}
+                                    >
+                                      {formatTimeLeft(t.dueAt, now)}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </li>
+                          );
+                        })}
                       </ul>
                     )}
                   </TableCell>

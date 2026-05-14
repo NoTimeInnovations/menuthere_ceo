@@ -38,6 +38,7 @@ import { ChangeStatusDialog } from "@/components/ChangeStatusDialog";
 import { EditCustomerDialog } from "@/components/EditCustomerDialog";
 import { TrackingCard } from "@/components/TrackingCard";
 import { TodosSection } from "@/components/TodosSection";
+import { PlanSection } from "@/components/PlanSection";
 import {
   ArrowLeftIcon,
   Pencil1Icon,
@@ -159,6 +160,8 @@ export function CustomerDetailPage() {
           </div>
         </CardHeader>
       </Card>
+
+      <PlanSection customerId={customer._id} plan={customer.plan} />
 
       <TrackingCard customer={customer} />
 

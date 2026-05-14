@@ -57,8 +57,9 @@ export const create = mutation({
   args: {
     customerId: v.optional(v.id("customers")),
     text: v.string(),
+    dueAt: v.optional(v.number()),
   },
-  handler: async (ctx, { customerId, text }) => {
+  handler: async (ctx, { customerId, text, dueAt }) => {
     if (customerId) {
       const customer = await ctx.db.get(customerId);
       if (!customer) throw new Error("Customer not found");
@@ -67,6 +68,7 @@ export const create = mutation({
       customerId,
       text,
       done: false,
+      dueAt,
     });
   },
 });
@@ -75,9 +77,32 @@ export const update = mutation({
   args: {
     id: v.id("todos"),
     text: v.string(),
+    dueAt: v.optional(v.number()),
   },
-  handler: async (ctx, { id, text }) => {
-    await ctx.db.patch(id, { text });
+  handler: async (ctx, { id, text, dueAt }) => {
+    await ctx.db.patch(id, { text, dueAt });
+  },
+});
+
+export const listForBanner = query({
+  args: {},
+  handler: async (ctx) => {
+    const todos = await ctx.db.query("todos").collect();
+    const customers = await ctx.db.query("customers").collect();
+    const customerMap = new Map(customers.map((c) => [c._id, c]));
+    return todos
+      .filter((t) => !t.done && t.dueAt !== undefined)
+      .map((t) => {
+        const customer = t.customerId ? customerMap.get(t.customerId) : null;
+        return {
+          _id: t._id,
+          text: t.text,
+          dueAt: t.dueAt!,
+          customer: customer
+            ? { _id: customer._id, name: customer.name }
+            : null,
+        };
+      });
   },
 });
 

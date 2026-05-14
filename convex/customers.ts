@@ -194,6 +194,17 @@ export const update = mutation({
   },
 });
 
+export const setPlan = mutation({
+  args: {
+    id: v.id("customers"),
+    plan: v.string(),
+  },
+  handler: async (ctx, { id, plan }) => {
+    const trimmed = plan.trim();
+    await ctx.db.patch(id, { plan: trimmed ? trimmed : undefined });
+  },
+});
+
 export const changeStatus = mutation({
   args: {
     id: v.id("customers"),
