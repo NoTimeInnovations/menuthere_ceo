@@ -67,3 +67,13 @@ export function formatTimeLeft(dueAt: number, now = Date.now()): string {
 export function isOverdue(dueAt: number | undefined, done: boolean, now = Date.now()): boolean {
   return !done && dueAt !== undefined && dueAt < now;
 }
+
+function startOfDay(now: number): number {
+  const d = new Date(now);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+export function isDueToday(dueAt: number, now = Date.now()): boolean {
+  return dueAt >= startOfDay(now) && dueAt <= endOfDay(now);
+}
