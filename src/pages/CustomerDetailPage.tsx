@@ -31,6 +31,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogOverlay,
+  DialogPortal,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { StatusBadge } from "@/components/StatusBadge";
 import { TimelineItem } from "@/components/TimelineItem";
 import { AddRemarkForm } from "@/components/AddRemarkForm";
@@ -45,6 +54,8 @@ import {
   TrashIcon,
   UpdateIcon,
   ChatBubbleIcon,
+  EnterFullScreenIcon,
+  Cross2Icon,
 } from "@radix-ui/react-icons";
 import { toast } from "sonner";
 
@@ -103,7 +114,45 @@ export function CustomerDetailPage() {
         <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex flex-col gap-1.5">
-              <CardTitle className="text-2xl">{customer.name}</CardTitle>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-2xl">{customer.name}</CardTitle>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-7 text-muted-foreground"
+                      aria-label="Show name and phone fullscreen"
+                    >
+                      <EnterFullScreenIcon />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogPortal>
+                    <DialogOverlay className="bg-background" />
+                    <DialogPrimitive.Content
+                      className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-8 bg-background p-6 outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+                    >
+                      <DialogPrimitive.Title className="text-center text-6xl font-bold tracking-tight sm:text-8xl md:text-9xl break-words max-w-full">
+                        {customer.name}
+                      </DialogPrimitive.Title>
+                      <DialogPrimitive.Description className="text-center text-5xl font-mono font-semibold tracking-wider sm:text-7xl md:text-8xl break-words max-w-full">
+                        {customer.phone}
+                      </DialogPrimitive.Description>
+                      <DialogClose asChild>
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          className="absolute right-6 top-6"
+                          aria-label="Close"
+                        >
+                          <Cross2Icon data-icon="inline-start" />
+                          Close
+                        </Button>
+                      </DialogClose>
+                    </DialogPrimitive.Content>
+                  </DialogPortal>
+                </Dialog>
+              </div>
               <CardDescription>{customer.phone}</CardDescription>
               <div className="mt-1">
                 <StatusBadge status={customer.status} />
