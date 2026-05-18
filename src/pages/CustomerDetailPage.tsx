@@ -34,7 +34,6 @@ import {
 import {
   Dialog,
   DialogClose,
-  DialogContent,
   DialogOverlay,
   DialogPortal,
   DialogTrigger,
