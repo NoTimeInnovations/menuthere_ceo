@@ -174,7 +174,11 @@ export function TimelineItem({ remark }: { remark: Remark }) {
 function formatTimestamp(ts: number) {
   const d = new Date(ts);
   return d.toLocaleString(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
   });
 }

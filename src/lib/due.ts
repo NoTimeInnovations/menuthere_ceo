@@ -39,6 +39,7 @@ export function formatDueTime(dueAt: number, now = Date.now()): string {
   const time = d.toLocaleTimeString(undefined, {
     hour: "numeric",
     minute: "2-digit",
+    hour12: true,
   });
   if (isSameDay(d, new Date(now))) return time;
   const date = d.toLocaleDateString(undefined, {

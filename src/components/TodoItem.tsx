@@ -4,6 +4,7 @@ import { api } from "@convex/_generated/api";
 import { Doc } from "@convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateTimePicker } from "@/components/DateTimePicker";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -142,11 +143,9 @@ export function TodoItem({ todo }: { todo: Doc<"todos"> }) {
                 }
               }}
             />
-            <Input
-              type="datetime-local"
+            <DateTimePicker
               value={dueDraft}
-              onChange={(e) => setDueDraft(e.target.value)}
-              className="sm:w-[200px]"
+              onChange={setDueDraft}
               aria-label="Due date and time"
             />
             <div className="flex items-center gap-2">

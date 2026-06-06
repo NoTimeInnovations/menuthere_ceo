@@ -4,6 +4,7 @@ import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateTimePicker } from "@/components/DateTimePicker";
 import { toast } from "sonner";
 import { PlusIcon } from "@radix-ui/react-icons";
 import { fromLocalInputValue, nowLocalInputValue } from "@/lib/due";
@@ -46,12 +47,10 @@ export function AddTodoForm({
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
-      <div className="flex items-center gap-2">
-        <Input
-          type="datetime-local"
+      <div className="flex flex-wrap items-center gap-2">
+        <DateTimePicker
           value={due}
-          onChange={(e) => setDue(e.target.value)}
-          className="sm:w-[200px]"
+          onChange={setDue}
           aria-label="Due date and time"
         />
         <Button type="submit" disabled={submitting || !text.trim()}>
