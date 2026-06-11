@@ -21,6 +21,38 @@ export const list = query({
   },
 });
 
+export const withCounts = query({
+  args: {},
+  handler: async (ctx) => {
+    const statuses = await ctx.db
+      .query("statuses")
+      .withIndex("by_order")
+      .collect();
+    const customers = await ctx.db.query("customers").collect();
+    const counts = new Map<string, number>();
+    for (const c of customers) {
+      counts.set(c.statusId, (counts.get(c.statusId) ?? 0) + 1);
+    }
+    return statuses.map((s) => ({ ...s, count: counts.get(s._id) ?? 0 }));
+  },
+});
+
+export const reorder = mutation({
+  args: { ids: v.array(v.id("statuses")) },
+  handler: async (ctx, { ids }) => {
+    for (let i = 0; i < ids.length; i++) {
+      await ctx.db.patch(ids[i], { order: i });
+    }
+  },
+});
+
+export const setHiddenInSummary = mutation({
+  args: { id: v.id("statuses"), hidden: v.boolean() },
+  handler: async (ctx, { id, hidden }) => {
+    await ctx.db.patch(id, { hiddenInSummary: hidden ? true : undefined });
+  },
+});
+
 export const create = mutation({
   args: {
     name: v.string(),

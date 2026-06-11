@@ -26,6 +26,10 @@ import {
   CheckIcon,
   Cross2Icon,
   TrashIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+  EyeOpenIcon,
+  EyeNoneIcon,
 } from "@radix-ui/react-icons";
 import {
   AlertDialog,
@@ -60,7 +64,32 @@ export function ManageStatusesDialog({ children }: { children: ReactNode }) {
   const statuses = useQuery(api.statuses.list);
   const createStatus = useMutation(api.statuses.create);
   const removeStatus = useMutation(api.statuses.remove);
+  const reorderStatuses = useMutation(api.statuses.reorder);
+  const setHidden = useMutation(api.statuses.setHiddenInSummary);
   const [editingId, setEditingId] = useState<Id<"statuses"> | null>(null);
+
+  async function move(index: number, dir: -1 | 1) {
+    if (!statuses) return;
+    const target = index + dir;
+    if (target < 0 || target >= statuses.length) return;
+    const ids = statuses.map((s) => s._id);
+    [ids[index], ids[target]] = [ids[target], ids[index]];
+    try {
+      await reorderStatuses({ ids });
+    } catch (err) {
+      toast.error("Could not reorder statuses");
+      console.error(err);
+    }
+  }
+
+  async function toggleHidden(id: Id<"statuses">, hidden: boolean) {
+    try {
+      await setHidden({ id, hidden });
+    } catch (err) {
+      toast.error("Could not update visibility");
+      console.error(err);
+    }
+  }
 
   const [name, setName] = useState("");
   const [color, setColor] = useState(PRESET_COLORS[0]);
@@ -102,7 +131,9 @@ export function ManageStatusesDialog({ children }: { children: ReactNode }) {
         <DialogHeader>
           <DialogTitle>Manage statuses</DialogTitle>
           <DialogDescription>
-            Add, rename, recolor or delete your customer statuses.
+            Add, rename, recolor, reorder or delete statuses. Use the eye toggle
+            to hide a status from the dashboard summary. Order here sets the
+            priority shown on the dashboard.
           </DialogDescription>
         </DialogHeader>
 
@@ -116,7 +147,7 @@ export function ManageStatusesDialog({ children }: { children: ReactNode }) {
             </div>
             <div className="-mr-2 flex flex-1 flex-col gap-2 overflow-y-auto pr-2">
               {statuses?.length ? (
-                statuses.map((s) =>
+                statuses.map((s, i) =>
                   editingId === s._id ? (
                     <EditStatusRow
                       key={s._id}
@@ -126,13 +157,56 @@ export function ManageStatusesDialog({ children }: { children: ReactNode }) {
                   ) : (
                     <div
                       key={s._id}
-                      className="flex items-center justify-between rounded-md border bg-card px-3 py-2"
+                      className="flex items-center justify-between gap-1 rounded-md border bg-card px-3 py-2"
                     >
-                      <StatusBadge status={s} />
-                      <div className="flex items-center gap-1">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <StatusBadge status={s} />
+                        {s.hiddenInSummary && (
+                          <span className="text-xs text-muted-foreground">
+                            Hidden
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-0.5">
                         <Button
                           variant="ghost"
                           size="icon"
+                          className="size-8"
+                          onClick={() => move(i, -1)}
+                          disabled={i === 0}
+                          aria-label={`Move ${s.name} up`}
+                        >
+                          <ChevronUpIcon />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8"
+                          onClick={() => move(i, 1)}
+                          disabled={i === statuses.length - 1}
+                          aria-label={`Move ${s.name} down`}
+                        >
+                          <ChevronDownIcon />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8"
+                          onClick={() =>
+                            toggleHidden(s._id, !s.hiddenInSummary)
+                          }
+                          aria-label={
+                            s.hiddenInSummary
+                              ? `Show ${s.name} on dashboard`
+                              : `Hide ${s.name} from dashboard`
+                          }
+                        >
+                          {s.hiddenInSummary ? <EyeNoneIcon /> : <EyeOpenIcon />}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8"
                           onClick={() => setEditingId(s._id)}
                           aria-label={`Edit ${s.name}`}
                         >
@@ -143,7 +217,7 @@ export function ManageStatusesDialog({ children }: { children: ReactNode }) {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-destructive hover:text-destructive"
+                              className="size-8 text-destructive hover:text-destructive"
                               aria-label={`Delete ${s.name}`}
                             >
                               <TrashIcon />

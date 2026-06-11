@@ -92,6 +92,7 @@ export function CustomersPage() {
   }, [statusFilters]);
 
   const statuses = useQuery(api.statuses.list);
+  const statusCounts = useQuery(api.statuses.withCounts);
   useEffect(() => {
     if (!statuses || statusFilters.length === 0) return;
     const known = new Set(statuses.map((s) => s._id));
@@ -293,6 +294,42 @@ export function CustomersPage() {
           </Link>
         </Button>
       </div>
+
+      {statusCounts && statusCounts.some((s) => !s.hiddenInSummary) && (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+          {statusCounts
+            .filter((s) => !s.hiddenInSummary)
+            .map((s) => {
+              const active = statusFilters.includes(s._id);
+              return (
+                <button
+                  key={s._id}
+                  type="button"
+                  onClick={() => toggleStatus(s._id)}
+                  className={cn(
+                    "flex items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2.5 text-left transition-colors hover:bg-muted/50",
+                    active && "ring-2 ring-primary",
+                  )}
+                  style={{ borderLeftColor: s.color, borderLeftWidth: 4 }}
+                  aria-pressed={active}
+                >
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span
+                      className="size-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: s.color }}
+                    />
+                    <span className="truncate text-sm font-medium">
+                      {s.name}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-lg font-semibold tabular-nums">
+                    {s.count}
+                  </span>
+                </button>
+              );
+            })}
+        </div>
+      )}
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">

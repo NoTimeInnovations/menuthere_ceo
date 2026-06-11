@@ -6,6 +6,7 @@ export default defineSchema({
     name: v.string(),
     color: v.string(),
     order: v.number(),
+    hiddenInSummary: v.optional(v.boolean()),
   }).index("by_order", ["order"]),
 
   customers: defineTable({
