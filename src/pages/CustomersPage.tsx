@@ -83,6 +83,7 @@ export function CustomersPage() {
   const navigate = useNavigate();
   const now = useNow();
   const [search, setSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const [statusFilters, setStatusFilters] = useState<string[]>(loadInitialStatusFilters);
 
   useEffect(() => {
@@ -184,28 +185,65 @@ export function CustomersPage() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <InputGroup className="sm:w-72">
-            <InputGroupAddon>
-              <MagnifyingGlassIcon />
-            </InputGroupAddon>
-            <InputGroupInput
-              placeholder="Search by name…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            {search && (
-              <InputGroupAddon align="inline-end">
-                <button
-                  type="button"
-                  onClick={() => setSearch("")}
-                  aria-label="Clear search"
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <Cross2Icon />
-                </button>
+          <div className="relative sm:w-72">
+            <InputGroup>
+              <InputGroupAddon>
+                <MagnifyingGlassIcon />
               </InputGroupAddon>
+              <InputGroupInput
+                placeholder="Search by name…"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setSearchOpen(true);
+                }}
+                onFocus={() => setSearchOpen(true)}
+                onBlur={() => setTimeout(() => setSearchOpen(false), 150)}
+              />
+              {search && (
+                <InputGroupAddon align="inline-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearch("");
+                      setSearchOpen(false);
+                    }}
+                    aria-label="Clear search"
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <Cross2Icon />
+                  </button>
+                </InputGroupAddon>
+              )}
+            </InputGroup>
+            {searchOpen && search.trim() && customers && (
+              <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-72 overflow-y-auto rounded-md border bg-popover p-1 shadow-md">
+                {customers.length === 0 ? (
+                  <p className="px-2 py-3 text-center text-sm text-muted-foreground">
+                    No customers found
+                  </p>
+                ) : (
+                  customers.map((c) => (
+                    <button
+                      key={c._id}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        setSearchOpen(false);
+                        navigate(`/customers/${c._id}`);
+                      }}
+                      className="flex w-full flex-col items-start gap-0.5 rounded-sm px-2 py-1.5 text-left hover:bg-accent hover:text-accent-foreground"
+                    >
+                      <span className="text-sm font-medium">{c.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {c.phone}
+                      </span>
+                    </button>
+                  ))
+                )}
+              </div>
             )}
-          </InputGroup>
+          </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

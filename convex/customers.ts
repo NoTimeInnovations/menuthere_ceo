@@ -150,8 +150,13 @@ export const create = mutation({
     phone: v.string(),
     statusId: v.id("statuses"),
     initialRemark: v.optional(v.string()),
+    todoText: v.optional(v.string()),
+    todoDueAt: v.optional(v.number()),
   },
-  handler: async (ctx, { name, phone, statusId, initialRemark }) => {
+  handler: async (
+    ctx,
+    { name, phone, statusId, initialRemark, todoText, todoDueAt },
+  ) => {
     const all = await ctx.db.query("customers").collect();
     let minP = Number.POSITIVE_INFINITY;
     for (const c of all) {
@@ -177,6 +182,15 @@ export const create = mutation({
         customerId,
         text: `Customer added with status “${status?.name ?? "Unknown"}”.`,
         statusIdAtTime: statusId,
+      });
+    }
+    const todoTrimmed = todoText?.trim();
+    if (todoTrimmed) {
+      await ctx.db.insert("todos", {
+        customerId,
+        text: todoTrimmed,
+        done: false,
+        dueAt: todoDueAt,
       });
     }
     return customerId;

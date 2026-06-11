@@ -55,7 +55,9 @@ import {
   ChatBubbleIcon,
   EnterFullScreenIcon,
   Cross2Icon,
+  CopyIcon,
 } from "@radix-ui/react-icons";
+import { Phone as PhoneIcon } from "lucide-react";
 import { toast } from "sonner";
 
 export function CustomerDetailPage() {
@@ -152,7 +154,32 @@ export function CustomerDetailPage() {
                   </DialogPortal>
                 </Dialog>
               </div>
-              <CardDescription>{customer.phone}</CardDescription>
+              <div className="flex items-center gap-1.5">
+                <CardDescription>{customer.phone}</CardDescription>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 text-muted-foreground"
+                  aria-label="Copy phone number"
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(customer.phone);
+                    toast.success("Phone number copied");
+                  }}
+                >
+                  <CopyIcon />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 text-muted-foreground"
+                  aria-label="Call phone number"
+                  asChild
+                >
+                  <a href={`tel:${customer.phone.replace(/\s+/g, "")}`}>
+                    <PhoneIcon />
+                  </a>
+                </Button>
+              </div>
               <div className="mt-1">
                 <StatusBadge status={customer.status} />
               </div>

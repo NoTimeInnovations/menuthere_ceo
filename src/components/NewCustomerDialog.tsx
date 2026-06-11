@@ -29,6 +29,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ManageStatusesDialog } from "@/components/ManageStatusesDialog";
+import { DateTimePicker } from "@/components/DateTimePicker";
+import { fromLocalInputValue, nowLocalInputValue } from "@/lib/due";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -42,6 +44,8 @@ export function NewCustomerDialog({ children }: { children: ReactNode }) {
   const [phone, setPhone] = useState("");
   const [statusId, setStatusId] = useState<Id<"statuses"> | "">("");
   const [initialRemark, setInitialRemark] = useState("");
+  const [todoText, setTodoText] = useState("");
+  const [todoDue, setTodoDue] = useState<string>(nowLocalInputValue);
   const [submitting, setSubmitting] = useState(false);
 
   function reset() {
@@ -49,6 +53,8 @@ export function NewCustomerDialog({ children }: { children: ReactNode }) {
     setPhone("");
     setStatusId("");
     setInitialRemark("");
+    setTodoText("");
+    setTodoDue(nowLocalInputValue());
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -56,11 +62,15 @@ export function NewCustomerDialog({ children }: { children: ReactNode }) {
     if (!name.trim() || !phone.trim() || !statusId) return;
     setSubmitting(true);
     try {
+      const trimmedTodo = todoText.trim();
       const id = await createCustomer({
         name: name.trim(),
         phone: phone.trim(),
         statusId: statusId as Id<"statuses">,
         initialRemark: initialRemark.trim() || undefined,
+        todoText: trimmedTodo || undefined,
+        todoDueAt:
+          trimmedTodo && todoDue ? fromLocalInputValue(todoDue) : undefined,
       });
       toast.success("Customer added");
       reset();
@@ -159,6 +169,25 @@ export function NewCustomerDialog({ children }: { children: ReactNode }) {
                 onChange={(e) => setInitialRemark(e.target.value)}
                 rows={3}
               />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="customer-todo">
+                Todo (optional)
+              </FieldLabel>
+              <Input
+                id="customer-todo"
+                placeholder="e.g. Call to confirm menu…"
+                value={todoText}
+                onChange={(e) => setTodoText(e.target.value)}
+              />
+              <DateTimePicker
+                value={todoDue}
+                onChange={setTodoDue}
+                aria-label="Todo due date and time"
+              />
+              <FieldDescription>
+                Adds a todo for this customer with a due date and time.
+              </FieldDescription>
             </Field>
           </FieldGroup>
           <DialogFooter className="mt-4">
