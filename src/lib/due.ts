@@ -14,6 +14,13 @@ export function nowLocalInputValue(): string {
   return toLocalInputValue(Date.now());
 }
 
+export function tomorrowAt(hour: number, minute = 0): number {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  d.setHours(hour, minute, 0, 0);
+  return d.getTime();
+}
+
 function endOfDay(now: number): number {
   const d = new Date(now);
   d.setHours(23, 59, 59, 999);

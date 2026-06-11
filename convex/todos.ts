@@ -84,6 +84,20 @@ export const update = mutation({
   },
 });
 
+export const setDue = mutation({
+  args: {
+    id: v.id("todos"),
+    dueAt: v.number(),
+  },
+  handler: async (ctx, { id, dueAt }) => {
+    await ctx.db.patch(id, {
+      dueAt,
+      notifiedAt30m: undefined,
+      notifiedAtDue: undefined,
+    });
+  },
+});
+
 export const listForBanner = query({
   args: {},
   handler: async (ctx) => {

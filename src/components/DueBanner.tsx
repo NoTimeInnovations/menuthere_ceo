@@ -1,20 +1,36 @@
-import { useMemo } from "react";
-import { Link } from "react-router-dom";
-import { useQuery } from "convex/react";
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
+import { Id } from "@convex/_generated/dataModel";
 import {
   ExclamationTriangleIcon,
   ClockIcon,
   PersonIcon,
+  Cross2Icon,
 } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { DateTimePicker } from "@/components/DateTimePicker";
 import {
   formatDueTime,
   formatTimeLeft,
+  fromLocalInputValue,
   isDueToday,
   isOverdue,
+  toLocalInputValue,
+  tomorrowAt,
 } from "@/lib/due";
 import { useNow } from "@/lib/useNow";
+import { toast } from "sonner";
 
 type BannerTodo = {
   _id: string;
@@ -70,62 +86,131 @@ export function DueBanner() {
 }
 
 function BannerCard({ todo, now }: { todo: BannerTodo; now: number }) {
+  const navigate = useNavigate();
+  const setDue = useMutation(api.todos.setDue);
   const overdue = isOverdue(todo.dueAt, false, now);
-  const card = (
-    <div
-      className={cn(
-        "flex w-56 shrink-0 flex-col gap-1 rounded-md border bg-card px-3 py-2 text-left shadow-sm transition-colors",
-        overdue
-          ? "border-l-4 border-l-destructive border-destructive/30 bg-destructive/5 hover:bg-destructive/10"
-          : "border-l-4 border-l-amber-500 hover:bg-muted/60",
-      )}
-    >
-      <div className="flex items-center justify-between gap-2 text-[11px]">
-        <span
-          className={cn(
-            "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-medium",
-            overdue
-              ? "bg-destructive/15 text-destructive"
-              : "bg-amber-500/15 text-amber-700 dark:text-amber-300",
-          )}
-        >
-          <ClockIcon className="size-3" />
-          {formatDueTime(todo.dueAt, now)}
-        </span>
-        <span
-          className={cn(
-            "tabular-nums",
-            overdue ? "text-destructive font-medium" : "text-muted-foreground",
-          )}
-        >
-          {formatTimeLeft(todo.dueAt, now)}
-        </span>
-      </div>
-      <p
+
+  const [open, setOpen] = useState(false);
+  const [due, setDueValue] = useState(() =>
+    toLocalInputValue(tomorrowAt(11)),
+  );
+  const [saving, setSaving] = useState(false);
+
+  const href = todo.customer ? `/customers/${todo.customer._id}` : "/todos";
+
+  function openPostpone(e: React.MouseEvent) {
+    e.stopPropagation();
+    setDueValue(toLocalInputValue(tomorrowAt(11)));
+    setOpen(true);
+  }
+
+  async function confirm() {
+    setSaving(true);
+    try {
+      await setDue({
+        id: todo._id as Id<"todos">,
+        dueAt: fromLocalInputValue(due),
+      });
+      setOpen(false);
+      toast.success("Task postponed");
+    } catch (err) {
+      toast.error("Could not postpone task");
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <>
+      <div
+        onClick={() => navigate(href)}
         className={cn(
-          "line-clamp-2 text-sm leading-snug",
-          overdue && "text-destructive font-medium",
+          "flex w-56 shrink-0 cursor-pointer flex-col gap-1 rounded-md border bg-card px-3 py-2 text-left shadow-sm transition-colors",
+          overdue
+            ? "border-l-4 border-l-destructive border-destructive/30 bg-destructive/5 hover:bg-destructive/10"
+            : "border-l-4 border-l-amber-500 hover:bg-muted/60",
         )}
       >
-        {todo.text}
-      </p>
-      <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-        <PersonIcon className="size-3" />
-        <span className="truncate">{todo.customer?.name ?? "Extra todo"}</span>
+        <div className="flex items-center justify-between gap-2 text-[11px]">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-medium",
+              overdue
+                ? "bg-destructive/15 text-destructive"
+                : "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+            )}
+          >
+            <ClockIcon className="size-3" />
+            {formatDueTime(todo.dueAt, now)}
+          </span>
+          <span
+            className={cn(
+              "tabular-nums",
+              overdue ? "text-destructive font-medium" : "text-muted-foreground",
+            )}
+          >
+            {formatTimeLeft(todo.dueAt, now)}
+          </span>
+        </div>
+        <p
+          className={cn(
+            "line-clamp-2 text-sm leading-snug",
+            overdue && "text-destructive font-medium",
+          )}
+        >
+          {todo.text}
+        </p>
+        <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+          <div className="flex min-w-0 items-center gap-1">
+            <PersonIcon className="size-3 shrink-0" />
+            <span className="truncate">{todo.customer?.name ?? "Extra todo"}</span>
+          </div>
+          <button
+            type="button"
+            onClick={openPostpone}
+            aria-label="Close task and postpone"
+            className="inline-flex shrink-0 items-center gap-1 rounded-md border bg-background px-1.5 py-0.5 font-medium hover:bg-muted"
+          >
+            <Cross2Icon className="size-3" />
+            Close
+          </button>
+        </div>
       </div>
-    </div>
-  );
 
-  if (todo.customer) {
-    return (
-      <Link to={`/customers/${todo.customer._id}`} className="shrink-0">
-        {card}
-      </Link>
-    );
-  }
-  return (
-    <Link to="/todos" className="shrink-0">
-      {card}
-    </Link>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Postpone task</DialogTitle>
+            <DialogDescription>
+              “{todo.text}” will be rescheduled. By default it moves to tomorrow
+              morning at 11:00 AM — change the date and time below if needed.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-medium">New due date &amp; time</span>
+            <DateTimePicker
+              value={due}
+              onChange={setDueValue}
+              className="w-full sm:w-[230px]"
+              aria-label="New due date and time"
+            />
+          </div>
+          <DialogFooter className="mt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={saving}
+            >
+              Cancel
+            </Button>
+            <Button type="button" onClick={confirm} disabled={saving}>
+              {saving ? "Postponing…" : "Confirm"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
