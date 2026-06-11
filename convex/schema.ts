@@ -37,5 +37,7 @@ export default defineSchema({
     text: v.string(),
     done: v.boolean(),
     dueAt: v.optional(v.number()),
+    notifiedAt30m: v.optional(v.boolean()),
+    notifiedAtDue: v.optional(v.boolean()),
   }).index("by_customer", ["customerId"]),
 });
