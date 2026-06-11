@@ -41,7 +41,7 @@ export function DueBanner() {
 
   return (
     <div className="border-b bg-muted/40">
-      <div className="flex flex-col gap-2 px-6 py-3 lg:px-10">
+      <div className="flex flex-col gap-2 px-4 py-3 sm:px-6 lg:px-10">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
           <span className="font-semibold text-foreground">
             Tasks · {items.length}

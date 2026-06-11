@@ -274,8 +274,8 @@ function KanbanBoard({
   groups: Group[];
 }) {
   return (
-    <div className="-mx-6 overflow-x-auto pb-4 lg:-mx-10">
-      <div className="flex w-max items-start gap-4 px-6 lg:px-10">
+    <div className="-mx-4 overflow-x-auto pb-4 sm:-mx-6 lg:-mx-10">
+      <div className="flex w-max items-start gap-4 px-4 sm:px-6 lg:px-10">
         {extrasColumn}
         {groups.map(({ customer, todos }) => (
           <KanbanColumn key={customer._id} customer={customer} todos={todos} />

@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/StatusBadge";
+import { PhoneActions } from "@/components/PhoneActions";
 import { TrackingStatusBadge } from "@/components/TrackingStatusBadge";
 import { TRACKING_ITEMS } from "@/lib/tracking";
 import { NewCustomerDialog } from "@/components/NewCustomerDialog";
@@ -166,6 +167,116 @@ export function CustomersPage() {
     return `${statusFilters.length} statuses`;
   })();
 
+  type CustomerRow = NonNullable<typeof customers>[number];
+
+  function trackingRows(c: CustomerRow) {
+    return TRACKING_ITEMS.map(({ key, label }) => (
+      <div
+        key={key}
+        className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap"
+      >
+        <span>{label}:</span>
+        <TrackingStatusBadge value={c[key]} />
+      </div>
+    ));
+  }
+
+  function todoList(c: CustomerRow) {
+    if (c.todos.length === 0) {
+      return (
+        <span className="text-sm italic text-muted-foreground">No todos</span>
+      );
+    }
+    return (
+      <ul className="flex flex-col gap-1">
+        {c.todos.map((t) => {
+          const overdue = isOverdue(t.dueAt, t.done, now);
+          return (
+            <li
+              key={t._id}
+              className="flex flex-col gap-0.5 text-sm leading-snug"
+            >
+              <div className="flex gap-2">
+                <span aria-hidden>•</span>
+                <span
+                  className={cn(
+                    "whitespace-pre-wrap break-words",
+                    t.done && "text-muted-foreground line-through",
+                    !t.done && !overdue && "font-medium text-foreground",
+                    overdue &&
+                      "font-medium text-destructive underline decoration-destructive",
+                  )}
+                >
+                  {t.text}
+                </span>
+              </div>
+              {t.dueAt !== undefined && (
+                <div className="flex flex-wrap items-center gap-1.5 pl-4 text-[11px]">
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5",
+                      overdue
+                        ? "border-destructive/40 bg-destructive/10 text-destructive"
+                        : "border-border bg-muted text-muted-foreground",
+                      t.done && "opacity-60",
+                    )}
+                  >
+                    <ClockIcon className="size-3" />
+                    {formatDueTime(t.dueAt, now)}
+                  </span>
+                  {!t.done && (
+                    <span
+                      className={cn(
+                        "tabular-nums",
+                        overdue
+                          ? "text-destructive font-medium"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {formatTimeLeft(t.dueAt, now)}
+                    </span>
+                  )}
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
+
+  const emptyBlock = (
+    <Empty className="border-0">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <PersonIcon />
+        </EmptyMedia>
+        <EmptyTitle>
+          {filterActive ? "No matches" : "No customers yet"}
+        </EmptyTitle>
+        <EmptyDescription>
+          {filterActive
+            ? "Try a different search term or clear filters."
+            : "Add your first customer to start tracking remarks and status."}
+        </EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
+        {filterActive ? (
+          <Button variant="outline" onClick={clearFilters}>
+            Clear filters
+          </Button>
+        ) : (
+          <NewCustomerDialog>
+            <Button>
+              <PlusIcon data-icon="inline-start" />
+              Add customer
+            </Button>
+          </NewCustomerDialog>
+        )}
+      </EmptyContent>
+    </Empty>
+  );
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -183,7 +294,7 @@ export function CustomersPage() {
         </Button>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="relative sm:w-72">
             <InputGroup>
@@ -296,7 +407,7 @@ export function CustomersPage() {
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <PriorityDialog>
             <Button variant="outline">
               <DragHandleDots2Icon data-icon="inline-start" />
@@ -318,180 +429,156 @@ export function CustomersPage() {
         </div>
       </div>
 
-      <div className="rounded-md border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[180px]">Name</TableHead>
-              <TableHead className="w-[140px]">Phone</TableHead>
-              <TableHead className="w-[260px]">Status</TableHead>
-              <TableHead>Latest remark</TableHead>
-              <TableHead className="w-[320px]">Todos</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading &&
-              Array.from({ length: 4 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <Skeleton className="h-4 w-32" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-28" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-5 w-20 rounded-full" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-full" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-10 w-full" />
-                  </TableCell>
-                </TableRow>
-              ))}
+      {/* Mobile: card list */}
+      <div className="flex flex-col gap-3 md:hidden">
+        {isLoading &&
+          Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex flex-col gap-3 rounded-lg border bg-card p-4"
+            >
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-8 w-48" />
+            </div>
+          ))}
 
-            {!isLoading &&
-              customers?.map((c) => (
-                <TableRow
-                  key={c._id}
-                  className="cursor-pointer hover:bg-muted/50 align-top"
-                  onClick={() => navigate(`/customers/${c._id}`)}
-                >
-                  <TableCell className="font-medium">
-                    <div className="flex flex-col gap-0.5">
-                      <span>{c.name}</span>
-                      {c.plan && (
-                        <span className="text-xs font-normal text-muted-foreground whitespace-pre-wrap break-words">
-                          {c.plan}
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground whitespace-nowrap">
-                    {c.phone}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1.5">
-                      <StatusBadge status={c.status} />
-                      {TRACKING_ITEMS.map(({ key, label }) => (
-                        <div
-                          key={key}
-                          className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap"
-                        >
-                          <span>{label}:</span>
-                          <TrackingStatusBadge value={c[key]} />
-                        </div>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {c.latestRemark ? (
-                      <p className="whitespace-pre-wrap break-words leading-relaxed">
-                        {c.latestRemark.text}
-                      </p>
-                    ) : (
-                      <span className="italic">No remarks yet</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {c.todos.length === 0 ? (
-                      <span className="text-sm italic text-muted-foreground">
-                        No todos
-                      </span>
-                    ) : (
-                      <ul className="flex flex-col gap-1">
-                        {c.todos.map((t) => {
-                          const overdue = isOverdue(t.dueAt, t.done, now);
-                          return (
-                            <li
-                              key={t._id}
-                              className="flex flex-col gap-0.5 text-sm leading-snug"
-                            >
-                              <div className="flex gap-2">
-                                <span aria-hidden>•</span>
-                                <span
-                                  className={cn(
-                                    "whitespace-pre-wrap break-words",
-                                    t.done && "text-muted-foreground line-through",
-                                    !t.done && !overdue && "font-medium text-foreground",
-                                    overdue &&
-                                      "font-medium text-destructive underline decoration-destructive",
-                                  )}
-                                >
-                                  {t.text}
-                                </span>
-                              </div>
-                              {t.dueAt !== undefined && (
-                                <div className="flex flex-wrap items-center gap-1.5 pl-4 text-[11px]">
-                                  <span
-                                    className={cn(
-                                      "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5",
-                                      overdue
-                                        ? "border-destructive/40 bg-destructive/10 text-destructive"
-                                        : "border-border bg-muted text-muted-foreground",
-                                      t.done && "opacity-60",
-                                    )}
-                                  >
-                                    <ClockIcon className="size-3" />
-                                    {formatDueTime(t.dueAt, now)}
-                                  </span>
-                                  {!t.done && (
-                                    <span
-                                      className={cn(
-                                        "tabular-nums",
-                                        overdue
-                                          ? "text-destructive font-medium"
-                                          : "text-muted-foreground",
-                                      )}
-                                    >
-                                      {formatTimeLeft(t.dueAt, now)}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
+        {!isLoading &&
+          customers?.map((c) => (
+            <div
+              key={c._id}
+              onClick={() => navigate(`/customers/${c._id}`)}
+              className="flex flex-col gap-3 rounded-lg border bg-card p-4 active:bg-muted/50"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <span className="font-medium">{c.name}</span>
+                  {c.plan && (
+                    <span className="text-xs text-muted-foreground whitespace-pre-wrap break-words">
+                      {c.plan}
+                    </span>
+                  )}
+                </div>
+                <StatusBadge status={c.status} />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <span className="text-sm text-muted-foreground">{c.phone}</span>
+                <PhoneActions phone={c.phone} />
+              </div>
+
+              <div className="flex flex-col gap-1">{trackingRows(c)}</div>
+
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Latest remark
+                </span>
+                {c.latestRemark ? (
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words leading-relaxed">
+                    {c.latestRemark.text}
+                  </p>
+                ) : (
+                  <span className="text-sm italic text-muted-foreground">
+                    No remarks yet
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Todos
+                </span>
+                {todoList(c)}
+              </div>
+            </div>
+          ))}
 
         {isEmpty && (
-          <Empty className="border-0">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <PersonIcon />
-              </EmptyMedia>
-              <EmptyTitle>
-                {filterActive ? "No matches" : "No customers yet"}
-              </EmptyTitle>
-              <EmptyDescription>
-                {filterActive
-                  ? "Try a different search term or clear filters."
-                  : "Add your first customer to start tracking remarks and status."}
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-              {filterActive ? (
-                <Button variant="outline" onClick={clearFilters}>
-                  Clear filters
-                </Button>
-              ) : (
-                <NewCustomerDialog>
-                  <Button>
-                    <PlusIcon data-icon="inline-start" />
-                    Add customer
-                  </Button>
-                </NewCustomerDialog>
-              )}
-            </EmptyContent>
-          </Empty>
+          <div className="rounded-lg border bg-card">{emptyBlock}</div>
         )}
+      </div>
+
+      {/* Desktop / tablet: table */}
+      <div className="hidden rounded-md border bg-card md:block">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[180px]">Name</TableHead>
+                <TableHead className="w-[170px]">Phone</TableHead>
+                <TableHead className="w-[260px]">Status</TableHead>
+                <TableHead>Latest remark</TableHead>
+                <TableHead className="w-[320px]">Todos</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading &&
+                Array.from({ length: 4 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-28" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-20 rounded-full" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-full" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-10 w-full" />
+                    </TableCell>
+                  </TableRow>
+                ))}
+
+              {!isLoading &&
+                customers?.map((c) => (
+                  <TableRow
+                    key={c._id}
+                    className="cursor-pointer hover:bg-muted/50 align-top"
+                    onClick={() => navigate(`/customers/${c._id}`)}
+                  >
+                    <TableCell className="font-medium">
+                      <div className="flex flex-col gap-0.5">
+                        <span>{c.name}</span>
+                        {c.plan && (
+                          <span className="text-xs font-normal text-muted-foreground whitespace-pre-wrap break-words">
+                            {c.plan}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <div className="flex flex-col gap-2">
+                        <span className="whitespace-nowrap">{c.phone}</span>
+                        <PhoneActions phone={c.phone} />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1.5">
+                        <StatusBadge status={c.status} />
+                        {trackingRows(c)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {c.latestRemark ? (
+                        <p className="whitespace-pre-wrap break-words leading-relaxed">
+                          {c.latestRemark.text}
+                        </p>
+                      ) : (
+                        <span className="italic">No remarks yet</span>
+                      )}
+                    </TableCell>
+                    <TableCell>{todoList(c)}</TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        {isEmpty && emptyBlock}
       </div>
     </div>
   );
