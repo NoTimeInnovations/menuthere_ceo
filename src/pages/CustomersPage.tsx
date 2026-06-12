@@ -39,6 +39,7 @@ import { PhoneActions } from "@/components/PhoneActions";
 import { ChangeStatusDialog } from "@/components/ChangeStatusDialog";
 import { AddTodoDialog } from "@/components/AddTodoDialog";
 import { PostponeTodoButton } from "@/components/PostponeTodoDialog";
+import { DeleteTodoButton } from "@/components/DeleteTodoButton";
 import { TrackingStatusBadge } from "@/components/TrackingStatusBadge";
 import { TRACKING_ITEMS } from "@/lib/tracking";
 import { NewCustomerDialog } from "@/components/NewCustomerDialog";
@@ -247,6 +248,9 @@ export function CustomersPage() {
                     <PostponeTodoButton todoId={t._id} text={t.text} />
                   </span>
                 )}
+                <span onClick={(e) => e.stopPropagation()}>
+                  <DeleteTodoButton todoId={t._id} />
+                </span>
               </div>
             </li>
           );
