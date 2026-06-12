@@ -43,9 +43,9 @@ export function AddTodoForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2 sm:flex-row sm:items-center">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2">
       <Input
-        className="sm:flex-1"
+        className="w-full"
         placeholder={placeholder ?? "Add a todo for this customer…"}
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -54,6 +54,7 @@ export function AddTodoForm({
         <DateTimePicker
           value={due}
           onChange={setDue}
+          className="w-auto flex-1"
           aria-label="Due date and time"
         />
         <Button type="submit" disabled={submitting || !text.trim()}>
