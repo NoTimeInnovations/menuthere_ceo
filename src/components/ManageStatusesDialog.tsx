@@ -409,8 +409,9 @@ function SortableStatusRow({
                 Delete status "{status.name}"?
               </AlertDialogTitle>
               <AlertDialogDescription>
-                This can't be undone. If any customers still use this status,
-                deletion will be blocked.
+                Deleting a status is permanent. It can only be deleted if no
+                customers are in it — otherwise move those customers to another
+                status first.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

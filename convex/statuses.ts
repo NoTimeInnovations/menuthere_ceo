@@ -79,17 +79,17 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("statuses") },
   handler: async (ctx, { id }) => {
-    const inUse = await ctx.db
+    const inStatus = await ctx.db
       .query("customers")
       .withIndex("by_status", (q) => q.eq("statusId", id))
-      .take(1);
-    if (inUse.length > 0) {
-      const all = await ctx.db
-        .query("customers")
-        .withIndex("by_status", (q) => q.eq("statusId", id))
-        .collect();
+      .collect();
+    if (inStatus.length > 0) {
+      const status = await ctx.db.get(id);
+      const n = inStatus.length;
       throw new Error(
-        `Cannot delete: ${all.length} customer${all.length === 1 ? "" : "s"} still use${all.length === 1 ? "s" : ""} this status. Reassign them first.`,
+        `Can't delete "${status?.name ?? "this status"}" — ${n} customer${
+          n === 1 ? " is" : "s are"
+        } in this status. Move them to another status first.`,
       );
     }
     await ctx.db.delete(id);
