@@ -99,12 +99,13 @@ export const remove = mutation({
 export const seedDefaults = mutation({
   args: {},
   handler: async (ctx) => {
-    const existing = await ctx.db.query("statuses").collect();
-    const existingNames = new Set(existing.map((s) => s.name));
-    let nextOrder = existing.length;
+    // Only seed on a brand-new (empty) table. Seeding by missing name would
+    // resurrect statuses the user has intentionally deleted on every load.
+    const existing = await ctx.db.query("statuses").take(1);
+    if (existing.length > 0) return;
+    let order = 0;
     for (const s of DEFAULT_STATUSES) {
-      if (existingNames.has(s.name)) continue;
-      await ctx.db.insert("statuses", { ...s, order: nextOrder++ });
+      await ctx.db.insert("statuses", { ...s, order: order++ });
     }
   },
 });
