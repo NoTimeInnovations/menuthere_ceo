@@ -1,7 +1,25 @@
-import { useState, ReactNode } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { Doc, Id } from "@convex/_generated/dataModel";
+import {
+  closestCenter,
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +48,7 @@ import {
   ChevronDownIcon,
   EyeOpenIcon,
   EyeNoneIcon,
+  DragHandleDots2Icon,
 } from "@radix-ui/react-icons";
 import {
   AlertDialog,
@@ -67,19 +86,48 @@ export function ManageStatusesDialog({ children }: { children: ReactNode }) {
   const reorderStatuses = useMutation(api.statuses.reorder);
   const setHidden = useMutation(api.statuses.setHiddenInSummary);
   const [editingId, setEditingId] = useState<Id<"statuses"> | null>(null);
+  const [items, setItems] = useState<Doc<"statuses">[]>([]);
 
-  async function move(index: number, dir: -1 | 1) {
-    if (!statuses) return;
-    const target = index + dir;
-    if (target < 0 || target >= statuses.length) return;
-    const ids = statuses.map((s) => s._id);
-    [ids[index], ids[target]] = [ids[target], ids[index]];
+  // Keep a local copy so drag/up-down reorders apply optimistically.
+  useEffect(() => {
+    if (statuses) setItems(statuses);
+  }, [statuses]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 150, tolerance: 5 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  async function persistOrder(next: Doc<"statuses">[]) {
+    setItems(next);
     try {
-      await reorderStatuses({ ids });
+      await reorderStatuses({ ids: next.map((s) => s._id) });
     } catch (err) {
       toast.error("Could not reorder statuses");
       console.error(err);
     }
+  }
+
+  function move(index: number, dir: -1 | 1) {
+    const target = index + dir;
+    if (target < 0 || target >= items.length) return;
+    const next = items.slice();
+    [next[index], next[target]] = [next[target], next[index]];
+    persistOrder(next);
+  }
+
+  function handleDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIndex = items.findIndex((s) => s._id === active.id);
+    const newIndex = items.findIndex((s) => s._id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    persistOrder(arrayMove(items, oldIndex, newIndex));
   }
 
   async function toggleHidden(id: Id<"statuses">, hidden: boolean) {
@@ -142,111 +190,41 @@ export function ManageStatusesDialog({ children }: { children: ReactNode }) {
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold">Existing statuses</h3>
               <span className="text-xs text-muted-foreground">
-                {statuses?.length ?? 0} total
+                {items.length} total
               </span>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Drag the handle to reorder. Top of the list is highest priority.
+            </p>
             <div className="-mr-2 flex flex-1 flex-col gap-2 overflow-y-auto pr-2">
-              {statuses?.length ? (
-                statuses.map((s, i) =>
-                  editingId === s._id ? (
-                    <EditStatusRow
-                      key={s._id}
-                      status={s}
-                      onDone={() => setEditingId(null)}
-                    />
-                  ) : (
-                    <div
-                      key={s._id}
-                      className="flex items-center justify-between gap-1 rounded-md border bg-card px-3 py-2"
-                    >
-                      <div className="flex min-w-0 items-center gap-2">
-                        <StatusBadge status={s} />
-                        {s.hiddenInSummary && (
-                          <span className="text-xs text-muted-foreground">
-                            Hidden
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-0.5">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-8"
-                          onClick={() => move(i, -1)}
-                          disabled={i === 0}
-                          aria-label={`Move ${s.name} up`}
-                        >
-                          <ChevronUpIcon />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-8"
-                          onClick={() => move(i, 1)}
-                          disabled={i === statuses.length - 1}
-                          aria-label={`Move ${s.name} down`}
-                        >
-                          <ChevronDownIcon />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-8"
-                          onClick={() =>
-                            toggleHidden(s._id, !s.hiddenInSummary)
-                          }
-                          aria-label={
-                            s.hiddenInSummary
-                              ? `Show ${s.name} on dashboard`
-                              : `Hide ${s.name} from dashboard`
-                          }
-                        >
-                          {s.hiddenInSummary ? <EyeNoneIcon /> : <EyeOpenIcon />}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-8"
-                          onClick={() => setEditingId(s._id)}
-                          aria-label={`Edit ${s.name}`}
-                        >
-                          <Pencil1Icon />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-8 text-destructive hover:text-destructive"
-                              aria-label={`Delete ${s.name}`}
-                            >
-                              <TrashIcon />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Delete status "{s.name}"?
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This can't be undone. If any customers still use
-                                this status, deletion will be blocked.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDelete(s._id, s.name)}
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </div>
-                  ),
-                )
+              {items.length ? (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={items.map((s) => s._id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {items.map((s, i) => (
+                      <SortableStatusRow
+                        key={s._id}
+                        status={s}
+                        index={i}
+                        total={items.length}
+                        editing={editingId === s._id}
+                        onEdit={() => setEditingId(s._id)}
+                        onDoneEdit={() => setEditingId(null)}
+                        onMove={(dir) => move(i, dir)}
+                        onToggleHidden={() =>
+                          toggleHidden(s._id, !s.hiddenInSummary)
+                        }
+                        onDelete={() => handleDelete(s._id, s.name)}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
               ) : (
                 <p className="text-sm text-muted-foreground">
                   No statuses yet.
@@ -302,6 +280,147 @@ export function ManageStatusesDialog({ children }: { children: ReactNode }) {
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function SortableStatusRow({
+  status,
+  index,
+  total,
+  editing,
+  onEdit,
+  onDoneEdit,
+  onMove,
+  onToggleHidden,
+  onDelete,
+}: {
+  status: Doc<"statuses">;
+  index: number;
+  total: number;
+  editing: boolean;
+  onEdit: () => void;
+  onDoneEdit: () => void;
+  onMove: (dir: -1 | 1) => void;
+  onToggleHidden: () => void;
+  onDelete: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: status._id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  if (editing) {
+    return (
+      <div ref={setNodeRef} style={style}>
+        <EditStatusRow status={status} onDone={onDoneEdit} />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "flex items-center justify-between gap-1 rounded-md border bg-card px-2 py-2",
+        isDragging && "opacity-60 shadow-lg ring-2 ring-primary/40",
+      )}
+    >
+      <div className="flex min-w-0 items-center gap-1.5">
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          className="shrink-0 touch-none cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing"
+          aria-label={`Drag ${status.name}`}
+        >
+          <DragHandleDots2Icon className="size-5" />
+        </button>
+        <StatusBadge status={status} />
+        {status.hiddenInSummary && (
+          <span className="text-xs text-muted-foreground">Hidden</span>
+        )}
+      </div>
+      <div className="flex items-center gap-0.5">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          onClick={() => onMove(-1)}
+          disabled={index === 0}
+          aria-label={`Move ${status.name} up`}
+        >
+          <ChevronUpIcon />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          onClick={() => onMove(1)}
+          disabled={index === total - 1}
+          aria-label={`Move ${status.name} down`}
+        >
+          <ChevronDownIcon />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          onClick={onToggleHidden}
+          aria-label={
+            status.hiddenInSummary
+              ? `Show ${status.name} on dashboard`
+              : `Hide ${status.name} from dashboard`
+          }
+        >
+          {status.hiddenInSummary ? <EyeNoneIcon /> : <EyeOpenIcon />}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          onClick={onEdit}
+          aria-label={`Edit ${status.name}`}
+        >
+          <Pencil1Icon />
+        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 text-destructive hover:text-destructive"
+              aria-label={`Delete ${status.name}`}
+            >
+              <TrashIcon />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                Delete status "{status.name}"?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                This can't be undone. If any customers still use this status,
+                deletion will be blocked.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={onDelete}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </div>
   );
 }
 
