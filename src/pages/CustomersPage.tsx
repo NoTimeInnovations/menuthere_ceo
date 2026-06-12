@@ -43,7 +43,6 @@ import { TrackingStatusBadge } from "@/components/TrackingStatusBadge";
 import { TRACKING_ITEMS } from "@/lib/tracking";
 import { NewCustomerDialog } from "@/components/NewCustomerDialog";
 import { ManageStatusesDialog } from "@/components/ManageStatusesDialog";
-import { PriorityDialog } from "@/components/PriorityDialog";
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -51,7 +50,6 @@ import {
   PersonIcon,
   MixerHorizontalIcon,
   CaretDownIcon,
-  DragHandleDots2Icon,
   CheckboxIcon,
   ClockIcon,
   UpdateIcon,
@@ -456,12 +454,6 @@ export function CustomersPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <PriorityDialog>
-            <Button variant="outline">
-              <DragHandleDots2Icon data-icon="inline-start" />
-              Priority
-            </Button>
-          </PriorityDialog>
           <ManageStatusesDialog>
             <Button variant="outline">
               <MixerHorizontalIcon data-icon="inline-start" />

@@ -54,15 +54,18 @@ export const list = query({
       customers = await ctx.db.query("customers").order("desc").take(200);
     }
 
+    const statuses = await ctx.db.query("statuses").collect();
+    const statusMap = new Map(statuses.map((s) => [s._id, s]));
+
+    // Order the list by each customer's status priority (status order),
+    // newest first within the same status.
     customers.sort((a, b) => {
-      const ap = a.priority ?? Number.POSITIVE_INFINITY;
-      const bp = b.priority ?? Number.POSITIVE_INFINITY;
-      if (ap !== bp) return ap - bp;
+      const ao = statusMap.get(a.statusId)?.order ?? Number.POSITIVE_INFINITY;
+      const bo = statusMap.get(b.statusId)?.order ?? Number.POSITIVE_INFINITY;
+      if (ao !== bo) return ao - bo;
       return b._creationTime - a._creationTime;
     });
 
-    const statuses = await ctx.db.query("statuses").collect();
-    const statusMap = new Map(statuses.map((s) => [s._id, s]));
     return Promise.all(
       customers.map(async (c) => {
         const latestRemark = await ctx.db
@@ -82,55 +85,6 @@ export const list = query({
         };
       }),
     );
-  },
-});
-
-export const listForPriority = query({
-  args: {},
-  handler: async (ctx) => {
-    const customers = await ctx.db.query("customers").collect();
-    customers.sort((a, b) => {
-      const ap = a.priority ?? Number.POSITIVE_INFINITY;
-      const bp = b.priority ?? Number.POSITIVE_INFINITY;
-      if (ap !== bp) return ap - bp;
-      return b._creationTime - a._creationTime;
-    });
-    const statuses = await ctx.db.query("statuses").collect();
-    const statusMap = new Map(statuses.map((s) => [s._id, s]));
-    return customers.map((c) => ({
-      _id: c._id,
-      name: c.name,
-      phone: c.phone,
-      priority: c.priority,
-      status: statusMap.get(c.statusId) ?? null,
-    }));
-  },
-});
-
-export const reorder = mutation({
-  args: { ids: v.array(v.id("customers")) },
-  handler: async (ctx, { ids }) => {
-    for (let i = 0; i < ids.length; i++) {
-      await ctx.db.patch(ids[i], { priority: i });
-    }
-  },
-});
-
-export const ensurePriorities = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const all = await ctx.db.query("customers").order("desc").collect();
-    let maxP = -1;
-    for (const c of all) {
-      if (c.priority !== undefined && c.priority > maxP) maxP = c.priority;
-    }
-    let next = maxP + 1;
-    for (const c of all) {
-      if (c.priority === undefined) {
-        await ctx.db.patch(c._id, { priority: next });
-        next += 1;
-      }
-    }
   },
 });
 
@@ -157,17 +111,10 @@ export const create = mutation({
     ctx,
     { name, phone, statusId, initialRemark, todoText, todoDueAt },
   ) => {
-    const all = await ctx.db.query("customers").collect();
-    let minP = Number.POSITIVE_INFINITY;
-    for (const c of all) {
-      if (c.priority !== undefined && c.priority < minP) minP = c.priority;
-    }
-    const priority = minP === Number.POSITIVE_INFINITY ? 0 : minP - 1;
     const customerId = await ctx.db.insert("customers", {
       name,
       phone,
       statusId,
-      priority,
     });
     const remarkText = initialRemark?.trim();
     if (remarkText) {
@@ -420,14 +367,12 @@ export const seedCustomersIfEmpty = mutation({
     const fallback = byName.get("New Lead") ?? statuses[0];
     if (!fallback) return;
 
-    for (let i = 0; i < SEED_CUSTOMERS.length; i++) {
-      const c = SEED_CUSTOMERS[i];
+    for (const c of SEED_CUSTOMERS) {
       const status = byName.get(c.status) ?? fallback;
       const customerId = await ctx.db.insert("customers", {
         name: c.name,
         phone: c.phone,
         statusId: status._id,
-        priority: i,
       });
       await ctx.db.insert("remarks", {
         customerId,

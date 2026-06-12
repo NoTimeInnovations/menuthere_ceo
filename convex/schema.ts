@@ -13,6 +13,8 @@ export default defineSchema({
     name: v.string(),
     phone: v.string(),
     statusId: v.id("statuses"),
+    // Deprecated: customer-level priority was removed; the list now orders by
+    // status priority. Kept optional so existing docs still validate.
     priority: v.optional(v.number()),
     plan: v.optional(v.string()),
     playStore: v.optional(v.string()),
@@ -21,7 +23,6 @@ export default defineSchema({
     posIntegration: v.optional(v.string()),
   })
     .index("by_status", ["statusId"])
-    .index("by_priority", ["priority"])
     .searchIndex("search_name", {
       searchField: "name",
       filterFields: ["statusId"],
