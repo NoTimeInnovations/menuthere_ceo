@@ -12,9 +12,11 @@ import { fromLocalInputValue, nowLocalInputValue } from "@/lib/due";
 export function AddTodoForm({
   customerId,
   placeholder,
+  onAdded,
 }: {
   customerId?: Id<"customers">;
   placeholder?: string;
+  onAdded?: () => void;
 }) {
   const createTodo = useMutation(api.todos.create);
   const [text, setText] = useState("");
@@ -31,6 +33,7 @@ export function AddTodoForm({
       await createTodo({ customerId, text: trimmed, dueAt });
       setText("");
       setDue(nowLocalInputValue());
+      onAdded?.();
     } catch (err) {
       toast.error("Could not add todo");
       console.error(err);

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
 import {
@@ -10,27 +10,9 @@ import {
   Cross2Icon,
 } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { DateTimePicker } from "@/components/DateTimePicker";
-import {
-  formatDueTime,
-  formatTimeLeft,
-  fromLocalInputValue,
-  isDueToday,
-  isOverdue,
-  toLocalInputValue,
-  tomorrowAt,
-} from "@/lib/due";
+import { PostponeTodoDialog } from "@/components/PostponeTodoDialog";
+import { formatDueTime, formatTimeLeft, isDueToday, isOverdue } from "@/lib/due";
 import { useNow } from "@/lib/useNow";
-import { toast } from "sonner";
 
 type BannerTodo = {
   _id: string;
@@ -87,39 +69,10 @@ export function DueBanner() {
 
 function BannerCard({ todo, now }: { todo: BannerTodo; now: number }) {
   const navigate = useNavigate();
-  const setDue = useMutation(api.todos.setDue);
   const overdue = isOverdue(todo.dueAt, false, now);
-
   const [open, setOpen] = useState(false);
-  const [due, setDueValue] = useState(() =>
-    toLocalInputValue(tomorrowAt(11)),
-  );
-  const [saving, setSaving] = useState(false);
 
   const href = todo.customer ? `/customers/${todo.customer._id}` : "/todos";
-
-  function openPostpone(e: React.MouseEvent) {
-    e.stopPropagation();
-    setDueValue(toLocalInputValue(tomorrowAt(11)));
-    setOpen(true);
-  }
-
-  async function confirm() {
-    setSaving(true);
-    try {
-      await setDue({
-        id: todo._id as Id<"todos">,
-        dueAt: fromLocalInputValue(due),
-      });
-      setOpen(false);
-      toast.success("Task postponed");
-    } catch (err) {
-      toast.error("Could not postpone task");
-      console.error(err);
-    } finally {
-      setSaving(false);
-    }
-  }
 
   return (
     <>
@@ -168,7 +121,10 @@ function BannerCard({ todo, now }: { todo: BannerTodo; now: number }) {
           </div>
           <button
             type="button"
-            onClick={openPostpone}
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(true);
+            }}
             aria-label="Close task and postpone"
             className="inline-flex shrink-0 items-center gap-1 rounded-md border bg-background px-1.5 py-0.5 font-medium hover:bg-muted"
           >
@@ -178,39 +134,12 @@ function BannerCard({ todo, now }: { todo: BannerTodo; now: number }) {
         </div>
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Postpone task</DialogTitle>
-            <DialogDescription>
-              “{todo.text}” will be rescheduled. By default it moves to tomorrow
-              morning at 11:00 AM — change the date and time below if needed.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium">New due date &amp; time</span>
-            <DateTimePicker
-              value={due}
-              onChange={setDueValue}
-              className="w-full sm:w-[230px]"
-              aria-label="New due date and time"
-            />
-          </div>
-          <DialogFooter className="mt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={saving}
-            >
-              Cancel
-            </Button>
-            <Button type="button" onClick={confirm} disabled={saving}>
-              {saving ? "Postponing…" : "Confirm"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <PostponeTodoDialog
+        todoId={todo._id as Id<"todos">}
+        text={todo.text}
+        open={open}
+        onOpenChange={setOpen}
+      />
     </>
   );
 }

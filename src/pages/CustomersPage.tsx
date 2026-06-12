@@ -36,6 +36,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/StatusBadge";
 import { PhoneActions } from "@/components/PhoneActions";
+import { ChangeStatusDialog } from "@/components/ChangeStatusDialog";
+import { AddTodoDialog } from "@/components/AddTodoDialog";
+import { PostponeTodoButton } from "@/components/PostponeTodoDialog";
 import { TrackingStatusBadge } from "@/components/TrackingStatusBadge";
 import { TRACKING_ITEMS } from "@/lib/tracking";
 import { NewCustomerDialog } from "@/components/NewCustomerDialog";
@@ -51,6 +54,7 @@ import {
   DragHandleDots2Icon,
   CheckboxIcon,
   ClockIcon,
+  UpdateIcon,
 } from "@radix-ui/react-icons";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -211,34 +215,41 @@ export function CustomersPage() {
                   {t.text}
                 </span>
               </div>
-              {t.dueAt !== undefined && (
-                <div className="flex flex-wrap items-center gap-1.5 pl-4 text-[11px]">
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5",
-                      overdue
-                        ? "border-destructive/40 bg-destructive/10 text-destructive"
-                        : "border-border bg-muted text-muted-foreground",
-                      t.done && "opacity-60",
-                    )}
-                  >
-                    <ClockIcon className="size-3" />
-                    {formatDueTime(t.dueAt, now)}
-                  </span>
-                  {!t.done && (
+              <div className="flex flex-wrap items-center gap-1.5 pl-4 text-[11px]">
+                {t.dueAt !== undefined && (
+                  <>
                     <span
                       className={cn(
-                        "tabular-nums",
+                        "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5",
                         overdue
-                          ? "text-destructive font-medium"
-                          : "text-muted-foreground",
+                          ? "border-destructive/40 bg-destructive/10 text-destructive"
+                          : "border-border bg-muted text-muted-foreground",
+                        t.done && "opacity-60",
                       )}
                     >
-                      {formatTimeLeft(t.dueAt, now)}
+                      <ClockIcon className="size-3" />
+                      {formatDueTime(t.dueAt, now)}
                     </span>
-                  )}
-                </div>
-              )}
+                    {!t.done && (
+                      <span
+                        className={cn(
+                          "tabular-nums",
+                          overdue
+                            ? "text-destructive font-medium"
+                            : "text-muted-foreground",
+                        )}
+                      >
+                        {formatTimeLeft(t.dueAt, now)}
+                      </span>
+                    )}
+                  </>
+                )}
+                {!t.done && (
+                  <span onClick={(e) => e.stopPropagation()}>
+                    <PostponeTodoButton todoId={t._id} text={t.text} />
+                  </span>
+                )}
+              </div>
             </li>
           );
         })}
@@ -527,6 +538,27 @@ export function CustomersPage() {
                 </span>
                 {todoList(c)}
               </div>
+
+              <div
+                className="flex flex-wrap gap-2 border-t pt-3"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ChangeStatusDialog
+                  customerId={c._id}
+                  currentStatusId={c.statusId}
+                >
+                  <Button variant="outline" size="sm" className="flex-1">
+                    <UpdateIcon data-icon="inline-start" />
+                    Change status
+                  </Button>
+                </ChangeStatusDialog>
+                <AddTodoDialog customerId={c._id}>
+                  <Button variant="outline" size="sm" className="flex-1">
+                    <PlusIcon data-icon="inline-start" />
+                    Add todo
+                  </Button>
+                </AddTodoDialog>
+              </div>
             </div>
           ))}
 
@@ -545,7 +577,8 @@ export function CustomersPage() {
                 <TableHead className="w-[170px]">Phone</TableHead>
                 <TableHead className="w-[260px]">Status</TableHead>
                 <TableHead>Latest remark</TableHead>
-                <TableHead className="w-[320px]">Todos</TableHead>
+                <TableHead className="w-[300px]">Todos</TableHead>
+                <TableHead className="w-[170px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -566,6 +599,9 @@ export function CustomersPage() {
                     </TableCell>
                     <TableCell>
                       <Skeleton className="h-10 w-full" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-8 w-full" />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -609,6 +645,33 @@ export function CustomersPage() {
                       )}
                     </TableCell>
                     <TableCell>{todoList(c)}</TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <div className="flex flex-col gap-2">
+                        <ChangeStatusDialog
+                          customerId={c._id}
+                          currentStatusId={c.statusId}
+                        >
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-start"
+                          >
+                            <UpdateIcon data-icon="inline-start" />
+                            Change status
+                          </Button>
+                        </ChangeStatusDialog>
+                        <AddTodoDialog customerId={c._id}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-start"
+                          >
+                            <PlusIcon data-icon="inline-start" />
+                            Add todo
+                          </Button>
+                        </AddTodoDialog>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
             </TableBody>
