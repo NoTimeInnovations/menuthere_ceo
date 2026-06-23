@@ -54,7 +54,9 @@ import {
   CheckboxIcon,
   ClockIcon,
   UpdateIcon,
+  CopyIcon,
 } from "@radix-ui/react-icons";
+import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { formatDueTime, formatTimeLeft, isOverdue } from "@/lib/due";
@@ -62,6 +64,24 @@ import { useNow } from "@/lib/useNow";
 
 const STATUS_FILTER_KEY = "customers:statusFilters";
 const SCROLL_KEY = "customers:scrollY";
+
+function CopyPhoneButton({ phone }: { phone: string }) {
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="size-7 shrink-0 text-muted-foreground"
+      aria-label="Copy phone number"
+      onClick={async (e) => {
+        e.stopPropagation();
+        await navigator.clipboard.writeText(phone);
+        toast.success("Phone number copied");
+      }}
+    >
+      <CopyIcon />
+    </Button>
+  );
+}
 
 function loadInitialStatusFilters(): string[] {
   if (typeof window === "undefined") return [];
@@ -507,7 +527,12 @@ export function CustomersPage() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <span className="text-sm text-muted-foreground">{c.phone}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm text-muted-foreground">
+                    {c.phone}
+                  </span>
+                  <CopyPhoneButton phone={c.phone} />
+                </div>
                 <PhoneActions phone={c.phone} />
               </div>
 
@@ -621,7 +646,10 @@ export function CustomersPage() {
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       <div className="flex flex-col gap-2">
-                        <span className="whitespace-nowrap">{c.phone}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="whitespace-nowrap">{c.phone}</span>
+                          <CopyPhoneButton phone={c.phone} />
+                        </div>
                         <PhoneActions phone={c.phone} />
                       </div>
                     </TableCell>
