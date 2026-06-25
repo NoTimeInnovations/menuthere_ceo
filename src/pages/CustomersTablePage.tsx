@@ -81,6 +81,7 @@ export function CustomersTablePage() {
   const [columnFilters, setColumnFilters] = useState<
     Partial<Record<TrackingKey, TrackingStatus[]>>
   >({});
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
 
   const customers = useCustomers(search);
   const statuses = useQuery(api.statuses.list);
@@ -95,24 +96,34 @@ export function CustomersTablePage() {
     });
   }
 
+  function toggleStatusFilter(id: string) {
+    setStatusFilter((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
+
   function clearFilters() {
     setSearch("");
     setColumnFilters({});
+    setStatusFilter([]);
   }
 
-  const filtered = customers?.filter((c) =>
-    CUSTOMER_TABLE_COLUMNS.every((col) => {
+  const filtered = customers?.filter((c) => {
+    if (statusFilter.length > 0 && !statusFilter.includes(c.statusId))
+      return false;
+    return CUSTOMER_TABLE_COLUMNS.every((col) => {
       const selected = columnFilters[col.key];
       if (!selected || selected.length === 0) return true;
       const value = (c[col.key] ?? "not_started") as TrackingStatus;
       return selected.includes(value);
-    }),
-  );
+    });
+  });
 
   const isLoading = customers === undefined;
   const isEmpty = filtered !== undefined && filtered.length === 0;
   const filterActive =
     search.trim().length > 0 ||
+    statusFilter.length > 0 ||
     Object.values(columnFilters).some((v) => v && v.length > 0);
 
   return (
@@ -193,7 +204,12 @@ export function CustomersTablePage() {
                     }
                   />
                 ))}
-                <Th className="min-w-[300px]">Status / Remark / Todo</Th>
+                <StatusFilterHead
+                  statuses={statuses}
+                  selected={statusFilter}
+                  onToggle={toggleStatusFilter}
+                  onClear={() => setStatusFilter([])}
+                />
               </tr>
             </thead>
             <tbody>
@@ -328,6 +344,74 @@ function ColumnFilterHead({
                     style={{ backgroundColor: s.color }}
                   />
                   {trackingStatusLabel(column.key, s.value)}
+                </span>
+              </DropdownMenuCheckboxItem>
+            ))}
+            {active && (
+              <>
+                <DropdownMenuSeparator />
+                <button
+                  type="button"
+                  onClick={onClear}
+                  className="w-full rounded-sm px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                >
+                  Clear
+                </button>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </th>
+  );
+}
+
+function StatusFilterHead({
+  statuses,
+  selected,
+  onToggle,
+  onClear,
+}: {
+  statuses: Doc<"statuses">[] | undefined;
+  selected: string[];
+  onToggle: (id: string) => void;
+  onClear: () => void;
+}) {
+  const active = selected.length > 0;
+  return (
+    <th className="h-11 min-w-[300px] whitespace-nowrap border-b px-3 text-left align-middle font-medium text-muted-foreground">
+      <div className="flex items-center justify-between gap-1">
+        <span>Status / Remark / Todo</span>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "size-7 shrink-0",
+                active && "bg-primary/10 text-primary hover:text-primary",
+              )}
+              aria-label="Filter status"
+            >
+              <MixerHorizontalIcon />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuLabel>Filter status</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {statuses?.map((s) => (
+              <DropdownMenuCheckboxItem
+                key={s._id}
+                checked={selected.includes(s._id)}
+                onCheckedChange={() => onToggle(s._id)}
+                onSelect={(e) => e.preventDefault()}
+              >
+                <span className="inline-flex items-center gap-2">
+                  <span
+                    className="size-2 rounded-full"
+                    style={{ backgroundColor: s.color }}
+                  />
+                  {s.name}
                 </span>
               </DropdownMenuCheckboxItem>
             ))}
