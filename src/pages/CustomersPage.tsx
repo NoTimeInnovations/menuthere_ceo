@@ -55,6 +55,7 @@ import {
   ClockIcon,
   UpdateIcon,
   CopyIcon,
+  TableIcon,
 } from "@radix-ui/react-icons";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
@@ -320,12 +321,20 @@ export function CustomersPage() {
             Track every customer, status and remark in one place.
           </p>
         </div>
-        <Button variant="outline" asChild>
-          <Link to="/todos">
-            <CheckboxIcon data-icon="inline-start" />
-            Todos
-          </Link>
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/customers">
+              <TableIcon data-icon="inline-start" />
+              Table view
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/todos">
+              <CheckboxIcon data-icon="inline-start" />
+              Todos
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {statusCounts && statusCounts.some((s) => !s.hiddenInSummary) && (

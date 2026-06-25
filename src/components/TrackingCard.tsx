@@ -21,6 +21,7 @@ import {
   TRACKING_STATUSES,
   TrackingKey,
   TrackingStatus,
+  trackingStatusLabel,
 } from "@/lib/tracking";
 import { toast } from "sonner";
 
@@ -68,7 +69,7 @@ export function TrackingCard({ customer }: { customer: Doc<"customers"> }) {
                               className="size-2 rounded-full"
                               style={{ backgroundColor: s.color }}
                             />
-                            {s.label}
+                            {trackingStatusLabel(key, s.value)}
                           </span>
                         </SelectItem>
                       ))}

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { Layout } from "@/Layout";
 import { CustomersPage } from "@/pages/CustomersPage";
+import { CustomersTablePage } from "@/pages/CustomersTablePage";
 import { CustomerDetailPage } from "@/pages/CustomerDetailPage";
 import { TodosPage } from "@/pages/TodosPage";
 import { Toaster } from "@/components/ui/sonner";
@@ -25,6 +26,7 @@ export default function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<CustomersPage />} />
+          <Route path="/customers" element={<CustomersTablePage />} />
           <Route path="/todos" element={<TodosPage />} />
           <Route path="/customers/:id" element={<CustomerDetailPage />} />
         </Routes>

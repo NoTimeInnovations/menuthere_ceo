@@ -195,6 +195,7 @@ const TRACKING_KEY = v.union(
   v.literal("appStore"),
   v.literal("cashfree"),
   v.literal("posIntegration"),
+  v.literal("whatsapp"),
 );
 
 const TRACKING_STATUS = v.union(

@@ -21,6 +21,7 @@ export default defineSchema({
     appStore: v.optional(v.string()),
     cashfree: v.optional(v.string()),
     posIntegration: v.optional(v.string()),
+    whatsapp: v.optional(v.string()),
   })
     .index("by_status", ["statusId"])
     .searchIndex("search_name", {
