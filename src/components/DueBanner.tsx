@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
@@ -8,6 +8,8 @@ import {
   ClockIcon,
   PersonIcon,
   Cross2Icon,
+  ChevronUpIcon,
+  ChevronDownIcon,
 } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
 import { PostponeTodoDialog } from "@/components/PostponeTodoDialog";
@@ -21,9 +23,21 @@ type BannerTodo = {
   customer: { _id: string; name: string } | null;
 };
 
+const COLLAPSE_KEY = "dueBanner:collapsed";
+
+function loadCollapsed(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.localStorage.getItem(COLLAPSE_KEY) === "1";
+}
+
 export function DueBanner() {
   const todos = useQuery(api.todos.listForBanner) as BannerTodo[] | undefined;
   const now = useNow(30000);
+  const [collapsed, setCollapsed] = useState(loadCollapsed);
+
+  useEffect(() => {
+    window.localStorage.setItem(COLLAPSE_KEY, collapsed ? "1" : "0");
+  }, [collapsed]);
 
   const items = useMemo(() => {
     if (!todos) return [];
@@ -56,12 +70,23 @@ export function DueBanner() {
               {upcomingCount} pending
             </span>
           )}
+          <button
+            type="button"
+            onClick={() => setCollapsed((c) => !c)}
+            aria-expanded={!collapsed}
+            className="ml-auto inline-flex items-center gap-1 rounded-md border bg-background px-2 py-0.5 font-medium text-muted-foreground hover:bg-muted"
+          >
+            {collapsed ? <ChevronDownIcon /> : <ChevronUpIcon />}
+            {collapsed ? "Show" : "Hide"}
+          </button>
         </div>
-        <div className="-mx-1 flex gap-2 overflow-x-auto pb-1">
-          {items.map((t) => (
-            <BannerCard key={t._id} todo={t} now={now} />
-          ))}
-        </div>
+        {!collapsed && (
+          <div className="-mx-1 flex gap-2 overflow-x-auto pb-1">
+            {items.map((t) => (
+              <BannerCard key={t._id} todo={t} now={now} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
