@@ -396,7 +396,10 @@ function StatusFilterHead({
               <MixerHorizontalIcon />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent
+            align="end"
+            className="max-h-72 w-48 overflow-y-auto"
+          >
             <DropdownMenuLabel>Filter status</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {statuses?.map((s) => (
@@ -657,7 +660,7 @@ function StatusSelect({
           </span>
         </span>
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="max-h-64">
         <SelectGroup>
           {statuses?.map((s) => (
             <SelectItem key={s._id} value={s._id}>
