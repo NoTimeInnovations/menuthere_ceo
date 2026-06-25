@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
@@ -30,7 +37,16 @@ function loadCollapsed(): boolean {
   return window.localStorage.getItem(COLLAPSE_KEY) === "1";
 }
 
-export function DueBanner() {
+type DueBannerContextValue = {
+  items: BannerTodo[];
+  now: number;
+  collapsed: boolean;
+  setCollapsed: (next: boolean | ((prev: boolean) => boolean)) => void;
+};
+
+const DueBannerContext = createContext<DueBannerContextValue | null>(null);
+
+export function DueBannerProvider({ children }: { children: ReactNode }) {
   const todos = useQuery(api.todos.listForBanner) as BannerTodo[] | undefined;
   const now = useNow(30000);
   const [collapsed, setCollapsed] = useState(loadCollapsed);
@@ -46,7 +62,42 @@ export function DueBanner() {
       .sort((a, b) => a.dueAt - b.dueAt);
   }, [todos, now]);
 
-  if (!todos || items.length === 0) return null;
+  return (
+    <DueBannerContext.Provider value={{ items, now, collapsed, setCollapsed }}>
+      {children}
+    </DueBannerContext.Provider>
+  );
+}
+
+function useDueBanner(): DueBannerContextValue {
+  const ctx = useContext(DueBannerContext);
+  if (!ctx) {
+    throw new Error("useDueBanner must be used within a DueBannerProvider");
+  }
+  return ctx;
+}
+
+// Lives in the always-visible header so tasks can be re-shown after hiding.
+export function TasksToggleButton() {
+  const { items, collapsed, setCollapsed } = useDueBanner();
+  if (items.length === 0) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => setCollapsed((c) => !c)}
+      aria-expanded={!collapsed}
+      className="inline-flex items-center gap-1.5 rounded-md border bg-background px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"
+    >
+      {collapsed ? <ChevronDownIcon /> : <ChevronUpIcon />}
+      Tasks · {items.length}
+    </button>
+  );
+}
+
+export function DueBanner() {
+  const { items, now, collapsed } = useDueBanner();
+
+  if (items.length === 0 || collapsed) return null;
 
   const overdueCount = items.filter((t) => isOverdue(t.dueAt, false, now)).length;
   const upcomingCount = items.length - overdueCount;
@@ -70,23 +121,12 @@ export function DueBanner() {
               {upcomingCount} pending
             </span>
           )}
-          <button
-            type="button"
-            onClick={() => setCollapsed((c) => !c)}
-            aria-expanded={!collapsed}
-            className="ml-auto inline-flex items-center gap-1 rounded-md border bg-background px-2 py-0.5 font-medium text-muted-foreground hover:bg-muted"
-          >
-            {collapsed ? <ChevronDownIcon /> : <ChevronUpIcon />}
-            {collapsed ? "Show" : "Hide"}
-          </button>
         </div>
-        {!collapsed && (
-          <div className="-mx-1 flex gap-2 overflow-x-auto pb-1">
-            {items.map((t) => (
-              <BannerCard key={t._id} todo={t} now={now} />
-            ))}
-          </div>
-        )}
+        <div className="-mx-1 flex gap-2 overflow-x-auto pb-1">
+          {items.map((t) => (
+            <BannerCard key={t._id} todo={t} now={now} />
+          ))}
+        </div>
       </div>
     </div>
   );
