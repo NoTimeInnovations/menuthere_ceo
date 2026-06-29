@@ -37,6 +37,17 @@ import {
 } from "@/components/ui/input-group";
 import { NewCustomerDialog } from "@/components/NewCustomerDialog";
 import { PhoneActions } from "@/components/PhoneActions";
+import { PhaseModal } from "@/components/PhaseModal";
+import {
+  PHASES,
+  currentPhase,
+  phaseIndex,
+  phaseTaskCounts,
+  phaseComplete,
+  visibleTasks,
+  getChoice,
+  setChoiceTokens,
+} from "@/lib/phases";
 import {
   CUSTOMER_TABLE_COLUMNS,
   TRACKING_STATUSES,
@@ -51,6 +62,7 @@ import {
   PlusIcon,
   CopyIcon,
   ArrowRightIcon,
+  CheckIcon,
   CheckboxIcon,
   ListBulletIcon,
   MagnifyingGlassIcon,
@@ -230,6 +242,8 @@ export function CustomersTablePage() {
                 <Th className={NUM_HEAD}>#</Th>
                 <Th className={NAME_HEAD}>Name</Th>
                 <Th className="min-w-[180px]">Phone</Th>
+                <Th className="min-w-[150px]">Phase</Th>
+                <Th className="min-w-[280px]">Current phase tasks</Th>
                 {CUSTOMER_TABLE_COLUMNS.map((col) => (
                   <ColumnFilterHead
                     key={col.key}
@@ -259,7 +273,7 @@ export function CustomersTablePage() {
                     <Td className={NAME_COL}>
                       <Skeleton className="h-4 w-28" />
                     </Td>
-                    {Array.from({ length: 6 }).map((__, j) => (
+                    {Array.from({ length: 8 }).map((__, j) => (
                       <Td key={j}>
                         <Skeleton className="h-8 w-full" />
                       </Td>
@@ -546,6 +560,14 @@ function CustomerTableRow({
         </div>
       </Td>
 
+      <Td>
+        <PhaseCell customer={c} />
+      </Td>
+
+      <Td>
+        <PhaseTasksCell customer={c} />
+      </Td>
+
       {CUSTOMER_TABLE_COLUMNS.map((col) => (
         <Td key={col.key}>
           <TrackingSelect
@@ -581,6 +603,173 @@ function CustomerTableRow({
         </div>
       </Td>
     </tr>
+  );
+}
+
+function PhaseCell({ customer: c }: { customer: CustomerRow }) {
+  const [open, setOpen] = useState(false);
+  const choices = c.phaseChoices ?? [];
+  const tasks = c.phaseTasks ?? [];
+  const done = new Set(tasks);
+  const ph = currentPhase(c.phase);
+  const counts = phaseTaskCounts(ph, choices, done);
+  const complete = phaseComplete(ph, choices, done);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex w-full flex-col items-start gap-1 rounded-md border bg-background px-2.5 py-2 text-left transition-colors hover:border-primary/50 hover:bg-muted/40"
+      >
+        <span className="flex w-full items-center justify-between gap-2">
+          <span className="text-sm font-semibold">{ph.label}</span>
+          <span
+            className={cn(
+              "rounded px-1.5 py-0.5 text-[10px] font-medium tabular-nums",
+              complete ? "bg-green-500/15 text-green-700" : "bg-muted text-muted-foreground",
+            )}
+          >
+            {counts.done}/{counts.total}
+          </span>
+        </span>
+        <span className="truncate text-[11px] text-muted-foreground">{ph.title}</span>
+      </button>
+      {open && (
+        <PhaseModal
+          customerId={c._id}
+          name={c.name}
+          currentPhaseId={c.phase}
+          maxPhaseId={c.phaseMax}
+          tasks={tasks}
+          choices={choices}
+          onClose={() => setOpen(false)}
+        />
+      )}
+    </>
+  );
+}
+
+// Inline task list + Continue for the customer's CURRENT phase — complete the
+// phase and advance without opening the modal.
+function PhaseTasksCell({ customer: c }: { customer: CustomerRow }) {
+  const setProgress = useMutation(api.customers.setPhaseProgress);
+  const choices = c.phaseChoices ?? [];
+  const tasks = c.phaseTasks ?? [];
+  const done = new Set(tasks);
+  const curIdx = phaseIndex(c.phase);
+  const maxIdx = Math.max(phaseIndex(c.phaseMax), curIdx);
+  const phase = PHASES[curIdx];
+  const vTasks = visibleTasks(phase, choices);
+  const complete = phaseComplete(phase, choices, done);
+  const isLast = curIdx === PHASES.length - 1;
+  const unanswered = (phase.choices ?? []).filter(
+    (ch) => getChoice(choices, ch.key) === undefined,
+  );
+  const target = curIdx < maxIdx ? maxIdx : Math.min(curIdx + 1, PHASES.length - 1);
+
+  async function persist(
+    nextTasks: string[],
+    nextChoices: string[],
+    targetIdx: number,
+  ) {
+    try {
+      await setProgress({
+        id: c._id,
+        phase: PHASES[targetIdx].id,
+        max: PHASES[Math.max(maxIdx, targetIdx)].id,
+        tasks: nextTasks,
+        choices: nextChoices,
+      });
+    } catch (err) {
+      toast.error("Could not save");
+      console.error(err);
+    }
+  }
+  function toggle(tid: string) {
+    const next = done.has(tid) ? tasks.filter((t) => t !== tid) : [...tasks, tid];
+    persist(next, choices, curIdx);
+  }
+  function choose(key: string, value: string) {
+    persist(tasks, setChoiceTokens(choices, key, value), curIdx);
+  }
+  function cont() {
+    persist(tasks, choices, target);
+    toast.success(`Moved to ${PHASES[target].label}`);
+  }
+
+  return (
+    <div className="flex min-w-[260px] flex-col gap-2">
+      {/* decisions that gate the tasks */}
+      {unanswered.map((ch) => (
+        <div key={ch.key} className="rounded-md border border-amber-300 bg-amber-50 p-2 dark:bg-amber-950/30">
+          <p className="mb-1 text-xs font-medium">{ch.question}</p>
+          <div className="flex flex-wrap gap-1">
+            {ch.options.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => choose(ch.key, o.value)}
+                className="rounded border bg-card px-2 py-0.5 text-xs font-medium hover:bg-muted"
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {/* current phase tasks */}
+      {vTasks.length > 0 ? (
+        <ul className="flex flex-col gap-1">
+          {vTasks.map((t) => {
+            const checked = done.has(t.id);
+            return (
+              <li key={t.id}>
+                <button
+                  type="button"
+                  onClick={() => toggle(t.id)}
+                  className="flex w-full items-start gap-2 rounded px-1 py-0.5 text-left text-xs hover:bg-muted/50"
+                >
+                  <span
+                    className={cn(
+                      "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded border",
+                      checked ? "border-green-500 bg-green-500 text-white" : "border-muted-foreground/40",
+                    )}
+                  >
+                    {checked && <CheckIcon className="size-3" />}
+                  </span>
+                  <span className={cn("leading-snug", checked && "text-muted-foreground line-through")}>
+                    {t.label}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        unanswered.length === 0 && (
+          <span className="text-xs italic text-muted-foreground">No tasks in this phase</span>
+        )
+      )}
+
+      {/* continue */}
+      {isLast ? (
+        <Button
+          size="sm"
+          className="h-7 bg-green-600 hover:bg-green-700"
+          disabled={!complete}
+          onClick={() => toast.success(`${c.name} is live! 🎉`)}
+        >
+          {complete ? "Live 🎉" : "Complete all tasks"}
+        </Button>
+      ) : (
+        <Button size="sm" className="h-7" disabled={!complete} onClick={cont}>
+          Continue → {PHASES[target].label}
+          <ArrowRightIcon data-icon="inline-end" />
+        </Button>
+      )}
+    </div>
   );
 }
 

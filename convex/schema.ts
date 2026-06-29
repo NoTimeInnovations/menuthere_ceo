@@ -22,6 +22,19 @@ export default defineSchema({
     cashfree: v.optional(v.string()),
     posIntegration: v.optional(v.string()),
     whatsapp: v.optional(v.string()),
+    // Onboarding phase tracking (table-view "Phase" column).
+    //   phase        = id of the customer's current (working) phase (undefined = Phase 1)
+    //   phaseMax     = id of the furthest phase reached (so a jump-back can return to it)
+    //   phaseTasks   = ids of completed sub-tasks across all phases
+    //   phaseChoices = decision answers, stored as "key:value" (e.g. "petpooja:yes")
+    phase: v.optional(v.string()),
+    phaseMax: v.optional(v.string()),
+    phaseTasks: v.optional(v.array(v.string())),
+    phaseChoices: v.optional(v.array(v.string())),
+    // Deprecated visual-flow fields (kept optional for back-compat with old docs).
+    flowStep: v.optional(v.string()),
+    flowDone: v.optional(v.array(v.string())),
+    flowSkips: v.optional(v.array(v.string())),
   })
     .index("by_status", ["statusId"])
     .searchIndex("search_name", {

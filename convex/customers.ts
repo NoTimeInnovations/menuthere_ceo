@@ -218,6 +218,26 @@ export const setTracking = mutation({
   },
 });
 
+// Onboarding phase tracking: persist the current phase, completed task ids, and
+// decision answers. The client sends the full state, so this is idempotent.
+export const setPhaseProgress = mutation({
+  args: {
+    id: v.id("customers"),
+    phase: v.string(),
+    max: v.string(),
+    tasks: v.array(v.string()),
+    choices: v.array(v.string()),
+  },
+  handler: async (ctx, { id, phase, max, tasks, choices }) => {
+    await ctx.db.patch(id, {
+      phase,
+      phaseMax: max,
+      phaseTasks: tasks,
+      phaseChoices: choices,
+    });
+  },
+});
+
 export const remove = mutation({
   args: { id: v.id("customers") },
   handler: async (ctx, { id }) => {

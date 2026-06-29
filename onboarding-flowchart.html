@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Menuthere — Customer Onboarding SOP Flowchart</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1d212b;
+    --line: #2b3140;
+    --text: #e7ebf3;
+    --muted: #97a0b3;
+    --accent: #ff6a3d;       /* Menu orange */
+    --accent-2: #ffb300;
+    --blue: #4d9bff;
+    --green: #27c08a;
+    --red: #ff5f6d;
+    --purple: #a779ff;
+    --teal: #2dd4bf;
+    --yellow: #ffd24a;
+    --radius: 14px;
+    --shadow: 0 8px 24px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 50% -200px, #1b2030 0%, var(--bg) 60%);
+    color: var(--text);
+    line-height: 1.5;
+    padding-bottom: 80px;
+  }
+
+  /* ---------- Header ---------- */
+  header.top {
+    text-align: center;
+    padding: 38px 20px 24px;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+  header.top h1 {
+    margin: 0;
+    font-size: 30px;
+    letter-spacing: .3px;
+  }
+  header.top h1 span { color: var(--accent); }
+  header.top p {
+    margin: 8px auto 0;
+    color: var(--muted);
+    max-width: 760px;
+    font-size: 15px;
+  }
+  .meta-row {
+    margin-top: 16px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .pill {
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--muted);
+  }
+  .pill b { color: var(--text); font-weight: 600; }
+
+  /* ---------- Legend ---------- */
+  .legend {
+    max-width: 1000px;
+    margin: 22px auto 0;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px 26px;
+    justify-content: center;
+    box-shadow: var(--shadow);
+  }
+  .legend .item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .swatch { width: 26px; height: 16px; border-radius: 5px; display: inline-block; }
+  .swatch.step   { background: var(--panel-2); border: 1px solid var(--blue); }
+  .swatch.decide { background: #221a10; border: 1px solid var(--yellow); transform: rotate(0); border-radius: 3px; }
+  .swatch.action { background: #102018; border: 1px solid var(--green); }
+  .swatch.note   { background: #1c1830; border: 1px dashed var(--purple); }
+  .swatch.warn   { background: #2a1416; border: 1px solid var(--red); }
+  .swatch.live   { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+
+  /* ---------- Layout ---------- */
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+
+  .phase {
+    margin-top: 40px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .phase-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    background: linear-gradient(90deg, rgba(255,106,61,.14), transparent);
+    border-bottom: 1px solid var(--line);
+  }
+  .phase-num {
+    flex: 0 0 auto;
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: grid; place-items: center;
+    font-weight: 700; font-size: 18px;
+    background: var(--accent);
+    color: #1a0f0a;
+  }
+  .phase-head h2 { margin: 0; font-size: 19px; }
+  .phase-head .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .resp {
+    margin-left: auto;
+    text-align: right;
+    font-size: 12px;
+    color: var(--muted);
+    max-width: 260px;
+  }
+  .resp b { color: var(--teal); }
+
+  .phase-body { padding: 22px 26px 28px; }
+
+  /* ---------- Flow nodes ---------- */
+  .flow { display: flex; flex-direction: column; align-items: stretch; }
+
+  .node {
+    position: relative;
+    border-radius: 12px;
+    padding: 14px 16px 14px 18px;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+  }
+  .node + .connector { /* spacing handled by connector */ }
+
+  .node .tag {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    padding: 2px 9px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .node h3 { margin: 0 0 6px; font-size: 15.5px; }
+  .node ul { margin: 8px 0 0; padding-left: 18px; }
+  .node ul li { margin: 3px 0; font-size: 14px; }
+  .node p { margin: 6px 0 0; font-size: 14px; color: #cdd4e1; }
+
+  /* node color variants via left border + tag */
+  .node.step   { border-left: 4px solid var(--blue); }
+  .node.step .tag   { background: rgba(77,155,255,.15); color: var(--blue); }
+  .node.action { border-left: 4px solid var(--green); }
+  .node.action .tag { background: rgba(39,192,138,.15); color: var(--green); }
+  .node.warn   { border-left: 4px solid var(--red); background: #1f1416; }
+  .node.warn .tag   { background: rgba(255,95,109,.18); color: var(--red); }
+
+  /* connector arrow between stacked nodes */
+  .connector {
+    width: 2px;
+    height: 26px;
+    background: var(--line);
+    margin: 0 auto;
+    position: relative;
+  }
+  .connector::after {
+    content: "";
+    position: absolute;
+    bottom: -1px; left: 50%;
+    transform: translateX(-50%);
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid var(--line);
+  }
+  .connector.labeled::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    white-space: nowrap;
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--panel);
+    padding: 1px 7px;
+    border-radius: 5px;
+    border: 1px solid var(--line);
+  }
+
+  /* ---------- Decision diamond block ---------- */
+  .decision {
+    margin: 4px auto;
+    text-align: center;
+    background: #221c10;
+    border: 1px solid var(--yellow);
+    border-radius: 12px;
+    padding: 14px 18px;
+    max-width: 640px;
+    align-self: center;
+  }
+  .decision .qtag {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
+    color: var(--yellow); font-weight: 700;
+  }
+  .decision h3 { margin: 6px 0 0; font-size: 16px; }
+
+  /* branch container */
+  .branches {
+    display: flex;
+    gap: 18px;
+    margin-top: 8px;
+    align-items: stretch;
+  }
+  .branch {
+    flex: 1 1 0;
+    min-width: 0;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 0;
+    overflow: hidden;
+  }
+  .branch .b-head {
+    padding: 9px 14px;
+    font-weight: 700;
+    font-size: 13px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .branch.yes .b-head { background: rgba(39,192,138,.15); color: var(--green); }
+  .branch.no  .b-head { background: rgba(255,95,109,.14); color: var(--red); }
+  .branch.alt .b-head { background: rgba(167,121,255,.15); color: var(--purple); }
+  .branch .b-body { padding: 12px 14px; }
+  .branch .b-body p { margin: 0 0 6px; font-size: 13.5px; }
+  .branch .b-body ul { margin: 4px 0 0; padding-left: 18px; font-size: 13.5px; }
+  .branch .b-body li { margin: 2px 0; }
+  .branch .goto {
+    display: inline-block; margin-top: 8px;
+    font-size: 12px; color: var(--blue);
+    text-decoration: none; border-bottom: 1px dashed var(--blue);
+  }
+
+  /* ---------- Side note ---------- */
+  .sidenote {
+    margin-top: 12px;
+    background: #181430;
+    border: 1px dashed var(--purple);
+    border-radius: 10px;
+    padding: 11px 14px 11px 40px;
+    position: relative;
+    font-size: 13.5px;
+    color: #d8d2f0;
+  }
+  .sidenote::before {
+    content: "💡";
+    position: absolute;
+    left: 12px; top: 11px;
+    font-size: 15px;
+  }
+  .sidenote.warn {
+    background: #261316;
+    border-color: var(--red);
+    color: #f5d4d8;
+  }
+  .sidenote.warn::before { content: "⚠️"; }
+  .sidenote.info { border-color: var(--blue); background:#0f1c2e; color:#cfe2ff; }
+  .sidenote.info::before { content: "ℹ️"; }
+  .sidenote b { color: #fff; }
+
+  /* checklist */
+  .checklist { list-style: none; padding: 0; margin: 10px 0 0; }
+  .checklist li {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin: 6px 0;
+    font-size: 14px;
+    background: var(--panel-2);
+  }
+  .checklist li::before {
+    content: "☐";
+    color: var(--accent-2);
+    font-size: 16px;
+    line-height: 1.3;
+  }
+  .checklist.done li::before { content: "✅"; }
+
+  /* sub-grid for collected fields */
+  .fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px,1fr));
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .fields span {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 13px;
+    color: #cdd4e1;
+  }
+  .fields span::before { content: "• "; color: var(--accent); }
+
+  .phase-arrow {
+    text-align: center;
+    color: var(--accent);
+    font-size: 26px;
+    margin: 8px 0 -8px;
+  }
+
+  /* go live */
+  .golive {
+    margin-top: 40px;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(255,106,61,.18), rgba(255,179,0,.12));
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    padding: 30px 24px;
+    box-shadow: var(--shadow);
+  }
+  .golive h2 { margin: 0; font-size: 26px; }
+  .golive h2 .em { color: var(--accent-2); }
+  .golive p { color: var(--muted); margin: 8px 0 18px; }
+  .capabilities {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+  }
+  .capabilities span {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 13.5px;
+  }
+  .capabilities span::before { content: "✓ "; color: var(--green); font-weight: 700; }
+
+  /* sticky mini nav */
+  nav.toc {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: rgba(15,17,21,.92);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--line);
+    padding: 8px 14px;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+  }
+  nav.toc a {
+    flex: 0 0 auto;
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 5px 11px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  nav.toc a:hover { color: var(--text); border-color: var(--line); background: var(--panel); }
+
+  @media (max-width: 720px) {
+    .branches { flex-direction: column; }
+    .resp { display: none; }
+    .phase-body { padding: 18px 16px 22px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1><span>Menuthere</span> — Customer Onboarding SOP</h1>
+  <p>Complete master implementation flow followed after a restaurant subscribes to Menuza — from the first onboarding call until the restaurant is fully live and ready to receive orders.</p>
+  <div class="meta-row">
+    <span class="pill"><b>14</b> Phases</span>
+    <span class="pill"><b>2</b> Menu Paths (Petpooja / Manual)</span>
+    <span class="pill"><b>3</b> Delivery Models</span>
+    <span class="pill">Goal: <b>Go Live</b></span>
+  </div>
+</header>
+
+<nav class="toc">
+  <a href="#p1">1 · Onboarding Call</a>
+  <a href="#p2">2 · Petpooja</a>
+  <a href="#p3">3 · Manual Menu</a>
+  <a href="#p4">4 · Cashfree</a>
+  <a href="#p5">5 · WhatsApp Prep</a>
+  <a href="#p6">6 · Connect WhatsApp</a>
+  <a href="#p7">7 · Flows</a>
+  <a href="#p8">8 · Delivery Model</a>
+  <a href="#p9">9 · Delivery Settings</a>
+  <a href="#p10">10 · Delivery Boys</a>
+  <a href="#p11">11 · Testing</a>
+  <a href="#p12">12 · Marketing</a>
+  <a href="#p13">13 · Final QA</a>
+  <a href="#p14">14 · Go Live</a>
+</nav>
+
+<div class="legend">
+  <div class="item"><span class="swatch step"></span> Process Step</div>
+  <div class="item"><span class="swatch decide"></span> Decision / Condition</div>
+  <div class="item"><span class="swatch action"></span> Action in System</div>
+  <div class="item"><span class="swatch warn"></span> Critical Warning</div>
+  <div class="item"><span class="swatch note"></span> Side Note / Tip</div>
+  <div class="item"><span class="swatch live"></span> Go Live</div>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ PHASE 1 ============ -->
+  <section class="phase" id="p1">
+    <div class="phase-head">
+      <div class="phase-num">1</div>
+      <div>
+        <h2>Customer Onboarding Call</h2>
+        <div class="sub">First contact after subscription — set expectations & collect basics</div>
+      </div>
+      <div class="resp">Responsible:<br><b>CEO (Rinshad), Rimsha, Ameen, Implementation Expert</b></div>
+    </div>
+    <div class="phase-body">
+      <div class="flow">
+
+        <div class="node step">
+          <span class="tag">Step 1.1 · Welcome</span>
+          <h3>Welcome the customer & explain the journey</h3>
+          <p>Run the onboarding call after the customer subscribes. Walk them through everything onboarding covers:</p>
+          <ul>
+            <li>Menu Setup</li>
+            <li>Payment Gateway</li>
+            <li>WhatsApp Integration</li>
+            <li>Delivery Setup</li>
+            <li>Marketing Materials</li>
+            <li>Going Live</li>
+          </ul>
+          <div class="sidenote">Set clear expectations now — the customer should know each phase before any account is created.</div>
+        </div>
+
+        <div class="connector"></div>
+
+        <div class="node step">
+          <span class="tag">Step 1.2 · Basic Details</span>
+          <h3>Collect basic restaurant details</h3>
+          <div class="fields">
+            <span>Restaurant Name</span>
+            <span>Restaurant Owner Name</span>
+          </div>
+        </div>
+
+        <div class="connector"></div>
+
+        <div class="decision">
+          <span class="qtag">Step 1.3 · Decision</span>
+          <h3>Is the restaurant using Petpooja?</h3>
+          <div class="branches">
+            <div class="branch yes">
+              <div class="b-head">✔ YES — Uses Petpooja</div>
+              <div class="b-body">
+                <p>Restaurant already manages its menu in Petpooja POS.</p>
+                <a class="goto" href="#p2">→ Go to Phase 2 · Petpooja Integration Flow</a>
+              </div>
+            </div>
+            <div class="branch no">
+              <div class="b-head">✘ NO — No Petpooja</div>
+              <div class="b-body">
+                <p>Menu must be built by hand from PDF / photos / Excel.</p>
+                <a class="goto" href="#p3">→ Go to Phase 3 · Manual Menu Creation</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="phase-arrow">▼</div>
+
+  <!-- ============ PHASE 2 ============ -->
+  <section class="phase" id="p2">
+    <div class="phase-head">
+      <div class="phase-num">2</div>
+      <div>
+        <h2>Petpooja Integration Flow</h2>
+        <div class="sub">Only for Petpooja customers · menu auto-syncs from POS</div>
+      </div>
+      <div class="resp">Path: <b>YES branch</b></div>
+    </div>
+    <div class="phase-body">
+      <div class="flow">
+
+        <div class="node step">
+          <span class="tag">Step 2.1 · Collect Details</span>
+          <h3>Collect Petpooja details</h3>
+          <div class="fields">
+            <span>Petpooja Restaurant ID</span>
+            <span>Petpooja Registered Email</span>
+            <span>Google Maps Location</span>
+          </div>
+
+          <div class="branches" style="margin-top:14px;">
+            <div class="branch alt">
+              <div class="b-head">Tax type?</div>
+              <div class="b-body">
+                <p><b>Backward Tax</b> — prices already include GST; no extra tax at checkout.</p>
+                <p><b>Forward Tax</b> — GST calculated separately during billing.</p>
+              </div>
+            </div>
+            <div class="branch alt">
+              <div class="b-head">Menu type?</div>
+              <div class="b-body">
+                <p><b>Online Menu</b> or <b>Offline Menu</b></p>
+                <p style="color:var(--muted)">Most restaurants use <b>Offline Menu</b>.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="connector"></div>
+
+        <div class="node action">
+          <span class="tag">Step 2.2 · Create + Email</span>
+          <h3>Create restaurant in Menuthere</h3>
+          <p>Inside <b>Super Admin</b> → <b>Create Petpooja Partner</b> → enter the collected details → <b>Submit</b>.</p>
+          <div class="sidenote info">Email + website creation happens automatically on submit.</div>
+        </div>
+
+        <div class="connector"></div>
+
+        <div class="node step">
+          <span class="tag">Step 2.3 · Wait for Approval</span>
+          <h3>Wait for Petpooja approval</h3>
+          <p>The Petpooja partner team reviews the request.</p>
+          <div class="sidenote">While waiting: maintain status in <b>Excel</b> and contact the Petpooja point-of-contact to speed it up.</div>
+        </div>
+
+        <div class="connector labeled" data-label="Approved"></div>
+
+        <div class="node action">
+          <span class="tag">Step 2.5 · Menu Sync</span>
+          <h3>Menu synchronization</h3>
+          <p>Once approved, Petpooja pushes the menu to Menuza. Verify everything synced correctly:</p>
+          <ul>
+            <li>Categories · Items · Variants</li>
+            <li>Prices · Tax · Availability</li>
+            <li>Images</li>
+          </ul>
+        </div>
+
+        <div class="connector"></div>
+
+        <div class="node action">
+          <span class="tag">Step 2.6 · Image Creation</span>
+          <h3>Food image creation</h3>
+          <p>After the menu syncs, generate food images via <b>Get All Images</b> in Menu Management. Upload optimized images if the customer asks.</p>
+          <div class="sidenote">Images that didn't come through from Petpooja are filled in here, so the menu looks complete before the customer reviews it.</div>
+        </div>
+
+        <div class="connector"></div>
+
+        <div class="node step">
+          <span class="tag">Step 2.7 · Customer Verification</span>
+          <h3>Customer verifies the imported menu</h3>
+          <p>Share the imported menu. Customer checks: Prices · Names · Categories · Availability · Taxes · Spellings.</p>
+
+          <div class="sidenote info"><b>Ask the customer to place a test order first:</b> this confirms the <b>tax is calculated correctly</b> and the <b>menu/pricing is right</b> end-to-end before anything else. Fix any tax or price mismatch now.</div>
+
+          <div class="sidenote"><b>After the test order, ask the customer to rearrange the menu (important):</b> highest-selling items, most profitable items, chef recommendations and signature dishes should appear on top.</div>
+
+          <p style="margin-top:8px;color:var(--muted);font-size:13px;">Order of this step: ① verify details → ② place a test order to check tax &amp; menu → ③ rearrange the menu.</p>
+
+          <ul class="checklist">
+            <li>After approval, the Petpooja process ends</li>
+            <li>Send the customer their credentials + partner app links</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="phase-arrow">▼</div>
+
+  <!-- ============ PHASE 3 ============ -->
+  <section class="phase" id="p3">
+    <div class="phase-head">
+      <div class="phase-num">3</div>
+      <div>
+        <h2>Manual Menu Creation</h2>
+        <div class="sub">For non-Petpooja restaurants · menu built by hand</div>
+      </div>
+      <div class="resp">Path: <b>NO branch</b></div>
+    </div>
+    <div class="phase-body">
+      <div class="flow">
+
+        <div class="node step">
+          <span class="tag">Step 3.1 · Collect & Create</span>
+          <h3>Collect assets and create the restaurant</h3>
+          <div class="fields">
+            <span>Menu PDF / photos / Excel</span>
+            <span>Logo</span>
+            <span>Google Maps Location</span>
+          </div>
+          <p>Go to <b>menuthere.com</b> → enter the restaurant name → provide the menu and logo → create it.</p>
+        </div>
+
+        <div class="connector"></div>
+
+        <div class="node action">
+          <span class="tag">Step 3.2 · Food Images</span>
+          <h3>Food image creation</h3>
+          <p>Generate food images via <b>Get All Images</b> in Menu Management. Upload optimized images if the customer asks.</p>
+        </div>
+
+        <div class="connector"></div>
+
+        <div class="node step">
+          <span class="tag">Step 3.3 · Customer Verification</span>
+          <h3>Customer verifies the menu</h3>
+          <p>Customer checks: Names · Descriptions · Pricing · Categories · Availability · Recommended item ordering.</p>
+          <p>Corrections are made → menu approved.</p>
+          <ul class="checklist">
+            <li>Send the customer their credentials + partner app links</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="phase-arrow">▼ &nbsp; both paths merge here &nbsp; ▼</div>
+
+  <!-- ============ PHASE 4 ============ -->
+  <section class="phase" id="p4">
+    <div class="phase-head">
+      <div class="phase-num">4</div>
+      <div>
+        <h2>Cashfree Payment Gateway</h2>
+        <div class="sub">Online payment setup · optional</div>
+      </div>
+    </div>
+    <div class="phase-body">
+      <div class="flow">
+
+        <div class="decision">
+          <span class="qtag">Decision</span>
+          <h3>Does the customer require online payment?</h3>
+          <div class="branches">
+            <div class="branch no">
+              <div class="b-head">✘ NO</div>
+              <div class="b-body">
+                <p>Skip this entire phase.</p>
+                <a class="goto" href="#p5">→ Jump to Phase 5 · WhatsApp Prep</a>
+              </div>
+            </div>
+            <div class="branch yes">
+              <div class="b-head">✔ YES — Proceed</div>
+              <div class="b-body">
+                <p>Continue with Cashfree merchant setup below.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="connector labeled" data-label="If YES"></div>
+
+        <div class="node step">
+          <span class="tag">Step 4.1 · Collect Details</span>
+          <h3>Collect details</h3>
+          <div class="fields">
+            <span>Email</span>
+            <span>Phone Number</span>
+          </div>
+          <div class="sidenote info">Website is set by us, format: <b>menuza.com/username/home</b></div>
+        </div>
+
+        <div class="connector"></div>
+
+        <div class="node action">
+          <span class="tag">Step 4.2 · Create Account</span>
+          <h3>Create Cashfree account</h3>
+          <p>Login at <b>partner.cashfree.com</b> → Create Merchant → fill Email, Phone, Website, Restaurant Name → Save.</p>
+        </div>
+
+        <div class="connector"></div>
+
+        <div class="node step">
+          <span class="tag">Step 4.3 · Send KYC Link</span>
+          <h3>Customer completes KYC</h3>
+          <p>Required documents:</p>
+          <div class="fields">
+            <span>GST</span>
+            <span>Shop Establishment Certificate</span>
+            <span>Cancelled Cheque</span>
+            <span>Passbook</span>
+            <span>Aadhaar</span>
+            <span>PAN</span>
+            <span>Other required docs</span>
+          </div>
+        </div>
+
+        <div class="connector"></div>
+
+        <div class="decision">
+          <span class="qtag">Step 4.4 · KYC Monitoring</span>
+          <h3>Is KYC approved?</h3>
+          <div class="branches">
+            <div class="branch yes">
+              <div class="b-head">✔ Approved</div>
+              <div class="b-body"><p>Continue to next phase.</p></div>
+            </div>
+            <div class="branch no">
+              <div class="b-head">✘ Rejected</div>
+              <div class="b-body">
+                <p>Collect corrected documents → resubmit → repeat until approved.</p>
+              </div>
+            </div>
+          </div>
+          <div class="sidenote">Email Cashfree if there's any problem or a speed-up is needed.</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="phase-arrow">▼</div>
+
+  <!-- ============ PHASE 5 ============ -->
+  <section class="phase" id="p5">
+    <div class="phase-head">
+      <div class="phase-num">5</div>
+      <div>
+        <h2>WhatsApp Business — Prerequisites</h2>
+        <div class="sub">Make sure Facebook assets exist before connecting</div>
+      </div>
+    </div>
+    <div class="phase-body">
+      <div class="flow">
+
+        <div class="decision">
+          <span class="qtag">Decision</span>
+          <h3>What does the customer already have?</h3>
+          <p style="color:var(--muted);margin:6px 0 0;font-size:13px;">Facebook Account · Facebook Page · Business Portfolio</p>
+        </div>
+
+        <div class="connector"></div>
+
+        <div class="branches">
+          <div class="branch yes">
+            <div class="b-head">Scenario A — All available</div>
+            <div class="b-body">
+              <p>Everything is ready.</p>
+              <p><b>Proceed immediately</b> to Phase 6.</p>
+            </div>
+          </div>
+          <div class="branch alt">
+            <div class="b-head">Scenario B — Account only</div>
+            <div class="b-body">
+              <p>Page &amp; Portfolio missing. Send tutorial video. Customer should:</p>
+              <ul>
+                <li>Create Facebook Page</li>
+                <li>Create Business Portfolio</li>
+                <li>Upload profile picture</li>
+                <li>Complete business info</li>
+                <li>Publish min. 3 posts</li>
+              </ul>
+              <p style="margin-top:6px;"><b>Wait 24 hours</b>, then proceed.</p>
+            </div>
+          </div>
+          <div class="branch no">
+            <div class="b-head">Scenario C — Nothing</div>
+            <div class="b-body">
+              <p>No Facebook account. Customer creates:</p>
+              <ul>
+                <li>Facebook Account</li>
+                <li>Page</li>
+                <li>Business Portfolio</li>
+                <li>Upload info + publish posts</li>
+              </ul>
+              <p style="margin-top:6px;"><b>Wait ~3 days</b> — do this each day, then proceed.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidenote">The waiting period lets Meta build trust on the new page/portfolio before WhatsApp connection.</div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="phase-arrow">▼</div>
+
+  <!-- ============ PHASE 6 ============ -->
+  <section class="phase" id="p6">
+    <div class="phase-head">
+      <div class="phase-num">6</div>
+      <div>
+        <h2>Connect WhatsApp to Menuthere</h2>
+        <div class="sub">Live embedded signup via Meta</div>
+      </div>
+    </div>
+    <div class="phase-body">
+      <div class="flow">
+
+        <div class="node warn">
+          <span class="tag">Critical</span>
+          <h3>Must be done on a Laptop / Desktop — never mobile</h3>
+        </div>
+
+        <div class="connector"></div>
+
+        <div class="node step">
+          <span class="tag">Step 6.1 · Login</span>
+          <h3>Customer signs in</h3>
+          <p>Open <b>menuthere.com/login</b> and sign in with the credentials already provided.</p>
+        </div>
+
+        <div class="connector"></div>
+
+        <div class="node action">
+          <span class="tag">Step 6.2 · Start Connection</span>
+          <h3>Open Meta embedded signup</h3>
+          <p>On the dashboard → WhatsApp Connection section → click <b>Connect</b> → <b>Select Own WhatsApp</b> → <b>Connect WhatsApp Business Account</b>. The Meta embedded signup opens.</p>
+        </div>
+
+        <div class="connector"></div>
+
+        <div class="node step">
+          <span class="tag">Step 6.3 · Configure</span>
+          <h3>Set up the WhatsApp Business app</h3>
+          <ul>
+            <li>Select <b>Portfolio</b></li>
+            <li>Select <b>Create WhatsApp Business app</b></li>
+            <li>Enter: Business Name · Timezone · WhatsApp Phone Number · Display Name</li>
+            <li>Continue</li>
+          </ul>
+        </div>
+
+        <div class="connector"></div>
+
+        <div class="node action">
+          <span class="tag">Step 6.4 · Verify via message</span>
+          <h3>Confirm + scan QR</h3>
+          <p>Facebook Business sends a WhatsApp message to the connected number. Customer opens it → clicks <b>Connect</b> → a QR scanner appears → customer scans the QR shown on the screen.</p>
+        </div>
+
+        <div class="connector labeled" data-label="Connected"></div>
+
+        <div class="node step">
+          <span class="tag">Step 6.5 · Verify</span>
+          <h3>Connection established → redirect to Menuthere</h3>
+          <ul class="checklist">
+            <li>WhatsApp Connected</li>
+            <li>Green Status shown</li>
+            <li>No Errors</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="phase-arrow">▼</div>
+
+  <!-- ============ PHASE 7 ============ -->
+  <section class="phase" id="p7">
+    <div class="phase-head">
+      <div class="phase-num">7</div>
+      <div>
+        <h2>Enable Menuthere Flows</h2>
+        <div class="sub">Activate automation after WhatsApp is connected</div>
+      </div>
+    </div>
+    <div class="phase-body">
+      <div class="flow">
+        <div class="node action">
+          <span class="tag">Action</span>
+          <h3>Enable every toggle</h3>
+          <p>Go to <b>WhatsApp → Flows</b> and enable <b>every toggle</b>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="phase-arrow">▼</div>
+
+  <!-- ============ PHASE 8 ============ -->
+  <section class="phase" id="p8">
+    <div class="phase-head">
+      <div class="phase-num">8</div>
+      <div>
+        <h2>Delivery Configuration — Choose Model</h2>
+        <div class="sub">Pick how deliveries are fulfilled</div>
+      </div>
+    </div>
+    <div class="phase-body">
+      <div class="flow">
+
+        <div class="decision">
+          <span class="qtag">Decision</span>
+          <h3>Which delivery model fits the restaurant?</h3>
+        </div>
+
+        <div class="connector"></div>
+
+        <div class="branches">
+          <div class="branch yes">
+            <div class="b-head">Option 1 · V1 — Own riders</div>
+            <div class="b-body">
+              <p>Restaurant has its own riders. Created in Petpooja, then same riders added in Menuza.</p>
+              <div class="sidenote warn" style="margin-top:6px;">Name &amp; Phone Number <b>must match exactly</b> across both systems.</div>
+              <p style="margin-top:8px;"><b>Order flow:</b></p>
+              <ul>
+                <li>Customer orders</li>
+                <li>Restaurant accepts → dispatches</li>
+                <li>Manager selects rider</li>
+                <li>Rider gets notification → accepts</li>
+                <li>Delivery completed</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="branch alt">
+            <div class="b-head">Option 2 · V2 — Own + community</div>
+            <div class="b-body">
+              <p>Restaurant wants own riders <b>and</b> community riders.</p>
+              <ul>
+                <li>Delivery boys register themselves</li>
+                <li>Nearby riders within <b>5 KM</b> get notified</li>
+                <li>Interested rider accepts</li>
+                <li>Delivery starts</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="branch no">
+            <div class="b-head">Option 3 · Third-Party</div>
+            <div class="b-body">
+              <p>No riders &amp; no interest in V2 → enable <b>Porter</b> / <b>Rapido</b>.</p>
+              <ul>
+                <li>Developer <b>Abhin</b> configures integration</li>
+                <li>Restaurant connects account</li>
+                <li>Restaurant periodically recharges → reconnect after</li>
+                <li>Verify successful integration</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="phase-arrow">▼</div>
+
+  <!-- ============ PHASE 9 ============ -->
+  <section class="phase" id="p9">
+    <div class="phase-head">
+      <div class="phase-num">9</div>
+      <div>
+        <h2>Delivery Settings</h2>
+        <div class="sub">Tune the delivery rules</div>
+      </div>
+    </div>
+    <div class="phase-body">
+      <div class="flow">
+        <div class="node step">
+          <span class="tag">Configure</span>
+          <h3>Set delivery parameters → verify</h3>
+          <div class="fields">
+            <span>Delivery Radius</span>
+            <span>Minimum Order Amount</span>
+            <span>Delivery Charges</span>
+            <span>Order Acceptance Rules</span>
+          </div>
+          <p style="margin-top:8px;">Order acceptance rules, e.g. requiring customer name &amp; location details.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="phase-arrow">▼</div>
+
+  <!-- ============ PHASE 10 ============ -->
+  <section class="phase" id="p10">
+    <div class="phase-head">
+      <div class="phase-num">10</div>
+      <div>
+        <h2>Delivery Boy Setup</h2>
+        <div class="sub">For V1 only · Petpooja restaurants</div>
+      </div>
+    </div>
+    <div class="phase-body">
+      <div class="flow">
+        <div class="node step">
+          <span class="tag">V1 only</span>
+          <h3>Create matching delivery boys</h3>
+          <ul>
+            <li>Send tutorial video</li>
+            <li>Customer creates delivery boys inside <b>Petpooja</b></li>
+            <li>Create the <b>same</b> delivery boys inside <b>Menuza</b></li>
+          </ul>
+          <div class="sidenote warn">Verify Name &amp; Phone Number — they <b>must match exactly</b> in both systems, or orders won't route to riders.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="phase-arrow">▼</div>
+
+  <!-- ============ PHASE 11 (TESTING) ============ -->
+  <section class="phase" id="p11">
+    <div class="phase-head">
+      <div class="phase-num">11</div>
+      <div>
+        <h2>Customer Testing Phase</h2>
+        <div class="sub">Customer places real test orders to confirm delivery &amp; tax rules work</div>
+      </div>
+    </div>
+    <div class="phase-body">
+      <div class="flow">
+
+        <div class="node step">
+          <span class="tag">Testing · Goal</span>
+          <h3>Ask the customer to test the live setup</h3>
+          <p>Before marketing materials and go-live, have the customer place real test orders and confirm each of these behaves correctly:</p>
+        </div>
+
+        <div class="connector"></div>
+
+        <div class="branches">
+          <div class="branch yes">
+            <div class="b-head">① Delivery Radius</div>
+            <div class="b-body">
+              <p>Order from <b>inside</b> the radius → should be accepted.</p>
+              <p>Order from <b>outside</b> the radius → should be blocked / show "out of range".</p>
+            </div>
+          </div>
+          <div class="branch yes">
+            <div class="b-head">② Delivery Charges</div>
+            <div class="b-body">
+              <p>Confirm the <b>delivery fee</b> shown at checkout matches the configured charge for the distance / order value.</p>
+            </div>
+          </div>
+          <div class="branch alt">
+            <div class="b-head">③ Tax (Petpooja, if any)</div>
+            <div class="b-body">
+              <p>Confirm <b>tax from Petpooja</b> is applied correctly at checkout.</p>
+              <p style="color:var(--muted)">Backward tax → no extra tax added. Forward tax → GST shown separately. Skip if the restaurant has no tax.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidenote warn">Do not proceed to go-live until <b>delivery radius, delivery charges, and tax</b> all behave correctly in a real test order. Re-check Phase 9 settings if anything is off.</div>
+
+        <ul class="checklist">
+          <li>Test order inside radius accepted</li>
+          <li>Test order outside radius blocked</li>
+          <li>Delivery charge correct at checkout</li>
+          <li>Petpooja tax correct at checkout (if applicable)</li>
+        </ul>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="phase-arrow">▼</div>
+
+  <!-- ============ PHASE 12 ============ -->
+  <section class="phase" id="p12">
+    <div class="phase-head">
+      <div class="phase-num">12</div>
+      <div>
+        <h2>Marketing Material Creation</h2>
+        <div class="sub">QR-based WhatsApp ordering entry point</div>
+      </div>
+    </div>
+    <div class="phase-body">
+      <div class="flow">
+        <div class="node action">
+          <span class="tag">Step 11.1 · QR Code</span>
+          <h3>Generate the WhatsApp QR code</h3>
+          <p>QR opens <b>wa.me/PhoneNumber?text=Hi</b></p>
+          <ul>
+            <li>Customer scans → WhatsApp opens with "Hi" pre-filled</li>
+            <li>Customer sends → Menuza replies with the ordering link</li>
+          </ul>
+        </div>
+
+        <div class="connector"></div>
+
+        <div class="node step">
+          <span class="tag">Step 11.2 · Print Assets</span>
+          <h3>Create physical materials</h3>
+          <div class="fields">
+            <span>QR Stand</span>
+            <span>Restaurant Poster</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="phase-arrow">▼</div>
+
+  <!-- ============ PHASE 13 ============ -->
+  <section class="phase" id="p13">
+    <div class="phase-head">
+      <div class="phase-num">13</div>
+      <div>
+        <h2>Final QA Checklist</h2>
+        <div class="sub">Everything must pass before going live</div>
+      </div>
+    </div>
+    <div class="phase-body">
+      <ul class="checklist">
+        <li>Ordering Website Working</li>
+        <li>Menu Correct</li>
+        <li>Images Correct</li>
+        <li>Petpooja Sync</li>
+        <li>Cashfree Connected</li>
+        <li>WhatsApp Connected</li>
+        <li>Flows Enabled</li>
+        <li>Delivery Working</li>
+        <li>Delivery Riders Working</li>
+        <li>QR Code Working</li>
+        <li>Poster Delivered</li>
+        <li>Customer Tested Order</li>
+        <li>Payment Successful</li>
+        <li>Delivery Successful</li>
+        <li>Restaurant Approved</li>
+      </ul>
+      <div class="sidenote info">Only when every box is ticked does the restaurant move to Go Live.</div>
+    </div>
+  </section>
+
+  <div class="phase-arrow">▼</div>
+
+  <!-- ============ PHASE 14 ============ -->
+  <section class="golive" id="p14">
+    <h2>🎉 Phase 14 — <span class="em">Restaurant is Officially LIVE</span></h2>
+    <p>The restaurant can now run full daily operations:</p>
+    <div class="capabilities">
+      <span>Receive Orders</span>
+      <span>Accept Orders</span>
+      <span>Receive Payments</span>
+      <span>Dispatch Deliveries</span>
+      <span>Track Orders</span>
+      <span>Receive WhatsApp Orders</span>
+      <span>Use QR Ordering</span>
+      <span>Begin Daily Operations</span>
+    </div>
+  </section>
+
+</div>
+
+</body>
+</html>
