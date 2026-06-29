@@ -85,8 +85,10 @@ const NUM_COL =
   "sticky left-0 z-20 w-12 bg-card group-hover:bg-muted/40";
 const NAME_COL =
   "sticky left-12 z-20 min-w-[180px] bg-card border-r group-hover:bg-muted/40";
-const NUM_HEAD = "sticky left-0 z-30 w-12 bg-card";
-const NAME_HEAD = "sticky left-12 z-30 min-w-[180px] bg-card border-r";
+// Header cells are also sticky to the top, so they stay pinned while scrolling.
+// Corner cells (#, Name) are sticky on both axes and sit above the rest (z-30).
+const NUM_HEAD = "sticky left-0 top-0 z-30 w-12 bg-card";
+const NAME_HEAD = "sticky left-12 top-0 z-30 min-w-[180px] bg-card border-r";
 
 export function CustomersTablePage() {
   const [search, setSearch] = useState("");
@@ -140,7 +142,7 @@ export function CustomersTablePage() {
     Object.values(columnFilters).some((v) => v && v.length > 0);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex h-full min-h-0 flex-col gap-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
           <h2 className="text-2xl font-semibold tracking-tight">
@@ -234,8 +236,8 @@ export function CustomersTablePage() {
         </InputGroup>
       </div>
 
-      <div className="rounded-md border bg-card">
-        <div className="overflow-x-auto">
+      <div className="flex min-h-0 flex-1 flex-col rounded-md border bg-card">
+        <div className="min-h-0 flex-1 overflow-auto">
           <table className="w-full caption-bottom border-separate border-spacing-0 text-sm">
             <thead>
               <tr className="border-b">
@@ -340,7 +342,7 @@ function Th({
   return (
     <th
       className={cn(
-        "h-11 whitespace-nowrap border-b px-3 text-left align-middle font-medium text-muted-foreground",
+        "sticky top-0 z-10 h-11 whitespace-nowrap border-b bg-card px-3 text-left align-middle font-medium text-muted-foreground",
         className,
       )}
     >
@@ -362,7 +364,7 @@ function ColumnFilterHead({
 }) {
   const active = selected.length > 0;
   return (
-    <th className="h-11 min-w-[150px] whitespace-nowrap border-b px-3 text-left align-middle font-medium text-muted-foreground">
+    <th className="sticky top-0 z-10 h-11 min-w-[150px] whitespace-nowrap border-b bg-card px-3 text-left align-middle font-medium text-muted-foreground">
       <div className="flex items-center justify-between gap-1">
         <span>{column.label}</span>
         <DropdownMenu>
@@ -430,7 +432,7 @@ function StatusFilterHead({
 }) {
   const active = selected.length > 0;
   return (
-    <th className="h-11 min-w-[300px] whitespace-nowrap border-b px-3 text-left align-middle font-medium text-muted-foreground">
+    <th className="sticky top-0 z-10 h-11 min-w-[300px] whitespace-nowrap border-b bg-card px-3 text-left align-middle font-medium text-muted-foreground">
       <div className="flex items-center justify-between gap-1">
         <span>Status / Remark / Todo</span>
         <DropdownMenu>
