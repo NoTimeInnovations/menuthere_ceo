@@ -155,7 +155,7 @@ export function CustomersTablePage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" asChild>
-            <Link to="/">
+            <Link to="/customers">
               <ListBulletIcon data-icon="inline-start" />
               Board view
             </Link>

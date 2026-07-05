@@ -323,7 +323,7 @@ export function CustomersPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" asChild>
-            <Link to="/customers">
+            <Link to="/">
               <TableIcon data-icon="inline-start" />
               Table view
             </Link>

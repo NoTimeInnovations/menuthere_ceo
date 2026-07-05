@@ -25,8 +25,8 @@ export default function App() {
       <ScrollToTopOnNonRoot />
       <Layout>
         <Routes>
-          <Route path="/" element={<CustomersPage />} />
-          <Route path="/customers" element={<CustomersTablePage />} />
+          <Route path="/" element={<CustomersTablePage />} />
+          <Route path="/customers" element={<CustomersPage />} />
           <Route path="/todos" element={<TodosPage />} />
           <Route path="/customers/:id" element={<CustomerDetailPage />} />
         </Routes>
