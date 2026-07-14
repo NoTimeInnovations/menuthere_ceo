@@ -9,6 +9,8 @@
  */
 
 import type * as customers from "../customers.js";
+import type * as phaseDefaults from "../phaseDefaults.js";
+import type * as phases from "../phases.js";
 import type * as remarks from "../remarks.js";
 import type * as statuses from "../statuses.js";
 import type * as todos from "../todos.js";
@@ -21,6 +23,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   customers: typeof customers;
+  phaseDefaults: typeof phaseDefaults;
+  phases: typeof phases;
   remarks: typeof remarks;
   statuses: typeof statuses;
   todos: typeof todos;

@@ -42,6 +42,44 @@ export default defineSchema({
       filterFields: ["statusId"],
     }),
 
+  // Onboarding phase definitions — the checklist template shared by every
+  // customer. One document per phase; `key` is the stable string id that a
+  // customer's progress (`customers.phase`, `phaseMax`, `phaseTasks`,
+  // `phaseChoices`) points at, so keys/ids must stay stable across edits.
+  phases: defineTable({
+    key: v.string(),
+    order: v.number(),
+    title: v.string(),
+    intro: v.optional(v.string()),
+    parallel: v.optional(v.boolean()),
+    choices: v.optional(
+      v.array(
+        v.object({
+          key: v.string(),
+          question: v.string(),
+          options: v.array(
+            v.object({ value: v.string(), label: v.string() }),
+          ),
+        }),
+      ),
+    ),
+    groups: v.array(
+      v.object({
+        id: v.string(),
+        label: v.optional(v.string()),
+        note: v.optional(v.string()),
+        showWhen: v.optional(v.object({ key: v.string(), value: v.string() })),
+        tasks: v.array(
+          v.object({
+            id: v.string(),
+            label: v.string(),
+            details: v.optional(v.array(v.string())),
+          }),
+        ),
+      }),
+    ),
+  }).index("by_order", ["order"]),
+
   remarks: defineTable({
     customerId: v.id("customers"),
     text: v.string(),

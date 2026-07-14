@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
@@ -39,7 +39,8 @@ import { NewCustomerDialog } from "@/components/NewCustomerDialog";
 import { PhoneActions } from "@/components/PhoneActions";
 import { PhaseModal } from "@/components/PhaseModal";
 import {
-  PHASES,
+  Phase,
+  toRuntimePhases,
   currentPhase,
   phaseIndex,
   phaseTaskCounts,
@@ -48,6 +49,7 @@ import {
   getChoice,
   setChoiceTokens,
 } from "@/lib/phases";
+import { phaseProgressOptimistic } from "@/lib/phaseOptimistic";
 import {
   CUSTOMER_TABLE_COLUMNS,
   TRACKING_STATUSES,
@@ -100,6 +102,11 @@ export function CustomersTablePage() {
   const customers = useCustomers(search);
   const statuses = useQuery(api.statuses.list);
   const statusCounts = useQuery(api.statuses.withCounts);
+  const phaseDocs = useQuery(api.phases.list);
+  const phases = useMemo(
+    () => (phaseDocs ? toRuntimePhases(phaseDocs) : undefined),
+    [phaseDocs],
+  );
 
   function toggleColumnFilter(key: TrackingKey, value: TrackingStatus) {
     setColumnFilters((prev) => {
@@ -123,16 +130,19 @@ export function CustomersTablePage() {
     setStatusFilter([]);
   }
 
-  const filtered = customers?.filter((c) => {
-    if (statusFilter.length > 0 && !statusFilter.includes(c.statusId))
-      return false;
-    return CUSTOMER_TABLE_COLUMNS.every((col) => {
-      const selected = columnFilters[col.key];
-      if (!selected || selected.length === 0) return true;
-      const value = (c[col.key] ?? "not_started") as TrackingStatus;
-      return selected.includes(value);
-    });
-  });
+  const filtered = customers
+    ?.filter((c) => {
+      if (statusFilter.length > 0 && !statusFilter.includes(c.statusId))
+        return false;
+      return CUSTOMER_TABLE_COLUMNS.every((col) => {
+        const selected = columnFilters[col.key];
+        if (!selected || selected.length === 0) return true;
+        const value = (c[col.key] ?? "not_started") as TrackingStatus;
+        return selected.includes(value);
+      });
+    })
+    // Newest customer first — the one you just added sits at the top.
+    .sort((a, b) => b._creationTime - a._creationTime);
 
   const isLoading = customers === undefined;
   const isEmpty = filtered !== undefined && filtered.length === 0;
@@ -290,6 +300,7 @@ export function CustomersTablePage() {
                     index={i}
                     customer={c}
                     statuses={statuses}
+                    phases={phases}
                   />
                 ))}
             </tbody>
@@ -508,10 +519,12 @@ function CustomerTableRow({
   index,
   customer: c,
   statuses,
+  phases,
 }: {
   index: number;
   customer: CustomerRow;
   statuses: Doc<"statuses">[] | undefined;
+  phases: Phase[] | undefined;
 }) {
   const navigate = useNavigate();
   const firstTodo = c.todos[0];
@@ -563,11 +576,11 @@ function CustomerTableRow({
       </Td>
 
       <Td>
-        <PhaseCell customer={c} />
+        <PhaseCell customer={c} phases={phases} />
       </Td>
 
       <Td>
-        <PhaseTasksCell customer={c} />
+        <PhaseTasksCell customer={c} phases={phases} />
       </Td>
 
       {CUSTOMER_TABLE_COLUMNS.map((col) => (
@@ -608,12 +621,23 @@ function CustomerTableRow({
   );
 }
 
-function PhaseCell({ customer: c }: { customer: CustomerRow }) {
+function PhaseCell({
+  customer: c,
+  phases,
+}: {
+  customer: CustomerRow;
+  phases: Phase[] | undefined;
+}) {
   const [open, setOpen] = useState(false);
   const choices = c.phaseChoices ?? [];
   const tasks = c.phaseTasks ?? [];
   const done = new Set(tasks);
-  const ph = currentPhase(c.phase);
+
+  if (!phases || phases.length === 0) {
+    return <Skeleton className="h-12 w-full" />;
+  }
+
+  const ph = currentPhase(phases, c.phase);
   const counts = phaseTaskCounts(ph, choices, done);
   const complete = phaseComplete(ph, choices, done);
 
@@ -641,6 +665,7 @@ function PhaseCell({ customer: c }: { customer: CustomerRow }) {
         <PhaseModal
           customerId={c._id}
           name={c.name}
+          phases={phases}
           currentPhaseId={c.phase}
           maxPhaseId={c.phaseMax}
           tasks={tasks}
@@ -654,21 +679,35 @@ function PhaseCell({ customer: c }: { customer: CustomerRow }) {
 
 // Inline task list + Continue for the customer's CURRENT phase — complete the
 // phase and advance without opening the modal.
-function PhaseTasksCell({ customer: c }: { customer: CustomerRow }) {
-  const setProgress = useMutation(api.customers.setPhaseProgress);
+function PhaseTasksCell({
+  customer: c,
+  phases,
+}: {
+  customer: CustomerRow;
+  phases: Phase[] | undefined;
+}) {
+  const setProgress = useMutation(
+    api.customers.setPhaseProgress,
+  ).withOptimisticUpdate(phaseProgressOptimistic);
   const choices = c.phaseChoices ?? [];
   const tasks = c.phaseTasks ?? [];
   const done = new Set(tasks);
-  const curIdx = phaseIndex(c.phase);
-  const maxIdx = Math.max(phaseIndex(c.phaseMax), curIdx);
-  const phase = PHASES[curIdx];
+
+  if (!phases || phases.length === 0) {
+    return <Skeleton className="h-20 w-full min-w-[260px]" />;
+  }
+
+  const curIdx = phaseIndex(phases, c.phase);
+  const maxIdx = Math.max(phaseIndex(phases, c.phaseMax), curIdx);
+  const phase = phases[curIdx];
   const vTasks = visibleTasks(phase, choices);
   const complete = phaseComplete(phase, choices, done);
-  const isLast = curIdx === PHASES.length - 1;
+  const isLast = curIdx === phases.length - 1;
   const unanswered = (phase.choices ?? []).filter(
     (ch) => getChoice(choices, ch.key) === undefined,
   );
-  const target = curIdx < maxIdx ? maxIdx : Math.min(curIdx + 1, PHASES.length - 1);
+  const target =
+    curIdx < maxIdx ? maxIdx : Math.min(curIdx + 1, phases.length - 1);
 
   async function persist(
     nextTasks: string[],
@@ -678,8 +717,8 @@ function PhaseTasksCell({ customer: c }: { customer: CustomerRow }) {
     try {
       await setProgress({
         id: c._id,
-        phase: PHASES[targetIdx].id,
-        max: PHASES[Math.max(maxIdx, targetIdx)].id,
+        phase: phases![targetIdx].id,
+        max: phases![Math.max(maxIdx, targetIdx)].id,
         tasks: nextTasks,
         choices: nextChoices,
       });
@@ -697,7 +736,7 @@ function PhaseTasksCell({ customer: c }: { customer: CustomerRow }) {
   }
   function cont() {
     persist(tasks, choices, target);
-    toast.success(`Moved to ${PHASES[target].label}`);
+    toast.success(`Moved to ${phases![target].label}`);
   }
 
   return (
@@ -767,7 +806,7 @@ function PhaseTasksCell({ customer: c }: { customer: CustomerRow }) {
         </Button>
       ) : (
         <Button size="sm" className="h-7" disabled={!complete} onClick={cont}>
-          Continue → {PHASES[target].label}
+          Continue → {phases[target].label}
           <ArrowRightIcon data-icon="inline-end" />
         </Button>
       )}

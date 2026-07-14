@@ -5,6 +5,7 @@ import { api } from "@convex/_generated/api";
 export function SeedStatuses() {
   const seedStatuses = useMutation(api.statuses.seedDefaults);
   const seedCustomers = useMutation(api.customers.seedCustomersIfEmpty);
+  const seedPhases = useMutation(api.phases.seedIfEmpty);
   const ran = useRef(false);
 
   useEffect(() => {
@@ -13,8 +14,9 @@ export function SeedStatuses() {
     void (async () => {
       await seedStatuses();
       await seedCustomers();
+      await seedPhases();
     })();
-  }, [seedStatuses, seedCustomers]);
+  }, [seedStatuses, seedCustomers, seedPhases]);
 
   return null;
 }
