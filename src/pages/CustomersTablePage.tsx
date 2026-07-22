@@ -75,6 +75,9 @@ import { toast } from "sonner";
 
 type CustomerRow = NonNullable<ReturnType<typeof useCustomers>>[number];
 
+// Temporarily hide the Phase / Current phase tasks columns. Flip to true to restore.
+const SHOW_PHASE_COLUMNS = false;
+
 function useCustomers(search: string) {
   return useQuery(api.customers.list, {
     search: search.trim() || undefined,
@@ -254,8 +257,18 @@ export function CustomersTablePage() {
                 <Th className={NUM_HEAD}>#</Th>
                 <Th className={NAME_HEAD}>Name</Th>
                 <Th className="min-w-[180px]">Phone</Th>
-                <Th className="min-w-[150px]">Phase</Th>
-                <Th className="min-w-[280px]">Current phase tasks</Th>
+                <StatusFilterHead
+                  statuses={statuses}
+                  selected={statusFilter}
+                  onToggle={toggleStatusFilter}
+                  onClear={() => setStatusFilter([])}
+                />
+                {SHOW_PHASE_COLUMNS && (
+                  <>
+                    <Th className="min-w-[150px]">Phase</Th>
+                    <Th className="min-w-[280px]">Current phase tasks</Th>
+                  </>
+                )}
                 {CUSTOMER_TABLE_COLUMNS.map((col) => (
                   <ColumnFilterHead
                     key={col.key}
@@ -267,12 +280,6 @@ export function CustomersTablePage() {
                     }
                   />
                 ))}
-                <StatusFilterHead
-                  statuses={statuses}
-                  selected={statusFilter}
-                  onToggle={toggleStatusFilter}
-                  onClear={() => setStatusFilter([])}
-                />
               </tr>
             </thead>
             <tbody>
@@ -576,24 +583,6 @@ function CustomerTableRow({
       </Td>
 
       <Td>
-        <PhaseCell customer={c} phases={phases} />
-      </Td>
-
-      <Td>
-        <PhaseTasksCell customer={c} phases={phases} />
-      </Td>
-
-      {CUSTOMER_TABLE_COLUMNS.map((col) => (
-        <Td key={col.key}>
-          <TrackingSelect
-            customerId={c._id}
-            columnKey={col.key}
-            value={c[col.key]}
-          />
-        </Td>
-      ))}
-
-      <Td>
         <div className="flex flex-col gap-2">
           <StatusSelect
             customerId={c._id}
@@ -617,6 +606,27 @@ function CustomerTableRow({
           </CellField>
         </div>
       </Td>
+
+      {SHOW_PHASE_COLUMNS && (
+        <>
+          <Td>
+            <PhaseCell customer={c} phases={phases} />
+          </Td>
+          <Td>
+            <PhaseTasksCell customer={c} phases={phases} />
+          </Td>
+        </>
+      )}
+
+      {CUSTOMER_TABLE_COLUMNS.map((col) => (
+        <Td key={col.key}>
+          <TrackingSelect
+            customerId={c._id}
+            columnKey={col.key}
+            value={c[col.key]}
+          />
+        </Td>
+      ))}
     </tr>
   );
 }
