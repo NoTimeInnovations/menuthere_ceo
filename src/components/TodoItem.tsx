@@ -34,11 +34,22 @@ import {
   toLocalInputValue,
 } from "@/lib/due";
 import { useNow } from "@/lib/useNow";
+import {
+  removeTodoOptimistic,
+  toggleTodoOptimistic,
+  updateTodoOptimistic,
+} from "@/lib/todoOptimistic";
 
 export function TodoItem({ todo }: { todo: Doc<"todos"> }) {
-  const toggleTodo = useMutation(api.todos.toggle);
-  const updateTodo = useMutation(api.todos.update);
-  const removeTodo = useMutation(api.todos.remove);
+  const toggleTodo = useMutation(api.todos.toggle).withOptimisticUpdate(
+    toggleTodoOptimistic,
+  );
+  const updateTodo = useMutation(api.todos.update).withOptimisticUpdate(
+    updateTodoOptimistic,
+  );
+  const removeTodo = useMutation(api.todos.remove).withOptimisticUpdate(
+    removeTodoOptimistic,
+  );
 
   const now = useNow();
   const [editing, setEditing] = useState(false);

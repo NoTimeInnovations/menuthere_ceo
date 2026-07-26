@@ -29,14 +29,22 @@ import {
   TrashIcon,
 } from "@radix-ui/react-icons";
 import { toast } from "sonner";
+import {
+  removeRemarkOptimistic,
+  updateRemarkOptimistic,
+} from "@/lib/remarkOptimistic";
 
 type Remark = Doc<"remarks"> & {
   status: Doc<"statuses"> | null;
 };
 
 export function TimelineItem({ remark }: { remark: Remark }) {
-  const updateRemark = useMutation(api.remarks.update);
-  const removeRemark = useMutation(api.remarks.remove);
+  const updateRemark = useMutation(api.remarks.update).withOptimisticUpdate(
+    updateRemarkOptimistic,
+  );
+  const removeRemark = useMutation(api.remarks.remove).withOptimisticUpdate(
+    removeRemarkOptimistic,
+  );
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(remark.text);
