@@ -35,8 +35,33 @@ export default defineSchema({
     flowStep: v.optional(v.string()),
     flowDone: v.optional(v.array(v.string())),
     flowSkips: v.optional(v.array(v.string())),
+
+    // ── Fast-track program (see /fast-track-customers) ──────────────────────
+    // A customer promoted into (or created for) the fast-track workflow.
+    fastTrack: v.optional(v.boolean()),
+    // "Needs & has" assessment. First three are yes/no; the order fields are
+    // per-day counts.
+    needsPos: v.optional(v.boolean()),
+    needsPg: v.optional(v.boolean()),
+    needsPorter: v.optional(v.boolean()),
+    aggregatorOrders: v.optional(v.number()),
+    callOrders: v.optional(v.number()),
+    dineTakeawayOrders: v.optional(v.number()),
+    // Fast-track "To-dos" checklist — ids of the completed items (the item
+    // template lives in src/lib/fastTrack.ts).
+    fastTrackTodos: v.optional(v.array(v.string())),
+    // Fast-track work progress — each is a toggle plus a free-text note.
+    websiteCreated: v.optional(v.boolean()),
+    websiteNote: v.optional(v.string()),
+    posConnected: v.optional(v.boolean()),
+    posNote: v.optional(v.string()),
+    pgConnected: v.optional(v.boolean()),
+    pgNote: v.optional(v.string()),
+    whatsappConnected: v.optional(v.boolean()),
+    whatsappNote: v.optional(v.string()),
   })
     .index("by_status", ["statusId"])
+    .index("by_fast_track", ["fastTrack"])
     .searchIndex("search_name", {
       searchField: "name",
       filterFields: ["statusId"],

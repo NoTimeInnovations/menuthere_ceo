@@ -70,6 +70,7 @@ import {
   MagnifyingGlassIcon,
   Cross2Icon,
   MixerHorizontalIcon,
+  RocketIcon,
 } from "@radix-ui/react-icons";
 import { toast } from "sonner";
 
@@ -167,6 +168,12 @@ export function CustomersTablePage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/fast-track-customers">
+              <RocketIcon data-icon="inline-start" />
+              Fast-track
+            </Link>
+          </Button>
           <Button variant="outline" asChild>
             <Link to="/customers">
               <ListBulletIcon data-icon="inline-start" />
@@ -534,7 +541,21 @@ function CustomerTableRow({
   phases: Phase[] | undefined;
 }) {
   const navigate = useNavigate();
+  const setFastTrack = useMutation(api.customers.setFastTrack);
   const firstTodo = c.todos[0];
+
+  async function toggleFastTrack() {
+    const next = !c.fastTrack;
+    try {
+      await setFastTrack({ id: c._id, fastTrack: next });
+      toast.success(
+        next ? `${c.name} promoted to fast-track` : `${c.name} removed from fast-track`,
+      );
+    } catch (err) {
+      toast.error("Could not update");
+      console.error(err);
+    }
+  }
 
   return (
     <tr className="group transition-colors hover:bg-muted/40">
@@ -549,15 +570,31 @@ function CustomerTableRow({
               {c.plan}
             </span>
           )}
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7"
-            onClick={() => navigate(`/customers/${c._id}`)}
-          >
-            Detail
-            <ArrowRightIcon data-icon="inline-end" />
-          </Button>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7"
+              onClick={() => navigate(`/customers/${c._id}`)}
+            >
+              Detail
+              <ArrowRightIcon data-icon="inline-end" />
+            </Button>
+            <Button
+              variant={c.fastTrack ? "default" : "ghost"}
+              size="sm"
+              className="h-7"
+              onClick={toggleFastTrack}
+              title={
+                c.fastTrack
+                  ? "Remove from fast-track"
+                  : "Promote to fast-track"
+              }
+            >
+              <RocketIcon data-icon="inline-start" />
+              {c.fastTrack ? "Fast-track" : "Promote"}
+            </Button>
+          </div>
         </div>
       </Td>
 

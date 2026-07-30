@@ -106,15 +106,17 @@ export const create = mutation({
     initialRemark: v.optional(v.string()),
     todoText: v.optional(v.string()),
     todoDueAt: v.optional(v.number()),
+    fastTrack: v.optional(v.boolean()),
   },
   handler: async (
     ctx,
-    { name, phone, statusId, initialRemark, todoText, todoDueAt },
+    { name, phone, statusId, initialRemark, todoText, todoDueAt, fastTrack },
   ) => {
     const customerId = await ctx.db.insert("customers", {
       name,
       phone,
       statusId,
+      fastTrack: fastTrack || undefined,
     });
     const remarkText = initialRemark?.trim();
     if (remarkText) {
@@ -215,6 +217,101 @@ export const setTracking = mutation({
   },
   handler: async (ctx, { id, key, value }) => {
     await ctx.db.patch(id, { [key]: value });
+  },
+});
+
+// ── Fast-track program ────────────────────────────────────────────────────
+
+// Every fast-track customer, with the same status/remark/todo shape the table
+// views expect. Fast-track customers are ordinary customers with `fastTrack`
+// set, so they also still appear on the regular list.
+export const listFastTrack = query({
+  args: {
+    search: v.optional(v.string()),
+  },
+  handler: async (ctx, { search }) => {
+    const trimmed = search?.trim();
+    let customers: Doc<"customers">[];
+    if (trimmed && trimmed.length > 0) {
+      const found = await ctx.db
+        .query("customers")
+        .withSearchIndex("search_name", (q) => q.search("name", trimmed))
+        .take(200);
+      customers = found.filter((c) => c.fastTrack === true);
+    } else {
+      customers = await ctx.db
+        .query("customers")
+        .withIndex("by_fast_track", (q) => q.eq("fastTrack", true))
+        .order("desc")
+        .take(500);
+    }
+
+    const statuses = await ctx.db.query("statuses").collect();
+    const statusMap = new Map(statuses.map((s) => [s._id, s]));
+
+    // Newest first.
+    customers.sort((a, b) => b._creationTime - a._creationTime);
+
+    return Promise.all(
+      customers.map(async (c) => {
+        const latestRemark = await ctx.db
+          .query("remarks")
+          .withIndex("by_customer", (q) => q.eq("customerId", c._id))
+          .order("desc")
+          .first();
+        const todos = await ctx.db
+          .query("todos")
+          .withIndex("by_customer", (q) => q.eq("customerId", c._id))
+          .collect();
+        return {
+          ...c,
+          status: statusMap.get(c.statusId) ?? null,
+          latestRemark,
+          todos,
+        };
+      }),
+    );
+  },
+});
+
+// Promote / demote a customer into the fast-track program.
+export const setFastTrack = mutation({
+  args: {
+    id: v.id("customers"),
+    fastTrack: v.boolean(),
+  },
+  handler: async (ctx, { id, fastTrack }) => {
+    await ctx.db.patch(id, { fastTrack: fastTrack || undefined });
+  },
+});
+
+// Patch any subset of the fast-track fields. Only the fields actually provided
+// are written, so a single-field edit (one toggle, one note, one count) never
+// clobbers the others.
+export const setFastTrackFields = mutation({
+  args: {
+    id: v.id("customers"),
+    needsPos: v.optional(v.boolean()),
+    needsPg: v.optional(v.boolean()),
+    needsPorter: v.optional(v.boolean()),
+    aggregatorOrders: v.optional(v.number()),
+    callOrders: v.optional(v.number()),
+    dineTakeawayOrders: v.optional(v.number()),
+    fastTrackTodos: v.optional(v.array(v.string())),
+    websiteCreated: v.optional(v.boolean()),
+    websiteNote: v.optional(v.string()),
+    posConnected: v.optional(v.boolean()),
+    posNote: v.optional(v.string()),
+    pgConnected: v.optional(v.boolean()),
+    pgNote: v.optional(v.string()),
+    whatsappConnected: v.optional(v.boolean()),
+    whatsappNote: v.optional(v.string()),
+  },
+  handler: async (ctx, { id, ...fields }) => {
+    const patch = Object.fromEntries(
+      Object.entries(fields).filter(([, value]) => value !== undefined),
+    );
+    await ctx.db.patch(id, patch);
   },
 });
 

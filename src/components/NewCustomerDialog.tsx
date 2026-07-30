@@ -34,7 +34,13 @@ import { fromLocalInputValue, nowLocalInputValue } from "@/lib/due";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
-export function NewCustomerDialog({ children }: { children: ReactNode }) {
+export function NewCustomerDialog({
+  children,
+  fastTrack = false,
+}: {
+  children: ReactNode;
+  fastTrack?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const statuses = useQuery(api.statuses.list);
   const createCustomer = useMutation(api.customers.create);
@@ -71,11 +77,12 @@ export function NewCustomerDialog({ children }: { children: ReactNode }) {
         todoText: trimmedTodo || undefined,
         todoDueAt:
           trimmedTodo && todoDue ? fromLocalInputValue(todoDue) : undefined,
+        fastTrack: fastTrack || undefined,
       });
-      toast.success("Customer added");
+      toast.success(fastTrack ? "Fast-track customer added" : "Customer added");
       reset();
       setOpen(false);
-      navigate(`/customers/${id}`);
+      navigate(fastTrack ? "/fast-track-customers" : `/customers/${id}`);
     } catch (err) {
       toast.error("Failed to add customer");
       console.error(err);

@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import { Layout } from "@/Layout";
 import { CustomersPage } from "@/pages/CustomersPage";
 import { CustomersTablePage } from "@/pages/CustomersTablePage";
+import { FastTrackCustomersPage } from "@/pages/FastTrackCustomersPage";
 import { CustomerDetailPage } from "@/pages/CustomerDetailPage";
 import { TodosPage } from "@/pages/TodosPage";
 import { Toaster } from "@/components/ui/sonner";
@@ -26,6 +27,10 @@ export default function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<CustomersTablePage />} />
+          <Route
+            path="/fast-track-customers"
+            element={<FastTrackCustomersPage />}
+          />
           <Route path="/customers" element={<CustomersPage />} />
           <Route path="/todos" element={<TodosPage />} />
           <Route path="/customers/:id" element={<CustomerDetailPage />} />
