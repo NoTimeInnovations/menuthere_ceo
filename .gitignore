@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Wrangler local state (Miniflare D1/KV cache, etc.)
+.wrangler

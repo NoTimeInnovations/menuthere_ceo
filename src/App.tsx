@@ -6,6 +6,7 @@ import { CustomersTablePage } from "@/pages/CustomersTablePage";
 import { FastTrackCustomersPage } from "@/pages/FastTrackCustomersPage";
 import { CustomerDetailPage } from "@/pages/CustomerDetailPage";
 import { TodosPage } from "@/pages/TodosPage";
+import { ExplorePage } from "@/pages/ExplorePage";
 import { Toaster } from "@/components/ui/sonner";
 import { SeedStatuses } from "@/components/SeedStatuses";
 
@@ -33,6 +34,7 @@ export default function App() {
           />
           <Route path="/customers" element={<CustomersPage />} />
           <Route path="/todos" element={<TodosPage />} />
+          <Route path="/explore" element={<ExplorePage />} />
           <Route path="/customers/:id" element={<CustomerDetailPage />} />
         </Routes>
       </Layout>

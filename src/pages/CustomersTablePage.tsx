@@ -71,6 +71,7 @@ import {
   Cross2Icon,
   MixerHorizontalIcon,
   RocketIcon,
+  GlobeIcon,
 } from "@radix-ui/react-icons";
 import { toast } from "sonner";
 
@@ -168,6 +169,12 @@ export function CustomersTablePage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/explore">
+              <GlobeIcon data-icon="inline-start" />
+              Explore
+            </Link>
+          </Button>
           <Button variant="outline" asChild>
             <Link to="/fast-track-customers">
               <RocketIcon data-icon="inline-start" />

@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "menuthere-explore-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-11-01",
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "menuthere-explore",
+      "database_id": "866300dc-0717-4795-a18d-6393e067f074"
+    }
+  ]
+}

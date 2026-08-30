@@ -7,6 +7,10 @@
     "dev": "convex dev --start \"vite --open\"",
     "dev:convex": "convex dev",
     "dev:web": "vite --open",
+    "dev:worker": "wrangler dev --config worker/wrangler.jsonc",
+    "deploy:worker": "wrangler deploy --config worker/wrangler.jsonc",
+    "db:explore:local": "wrangler d1 execute menuthere-explore --local --config worker/wrangler.jsonc --file worker/schema.sql",
+    "db:explore:remote": "wrangler d1 execute menuthere-explore --remote --config worker/wrangler.jsonc --file worker/schema.sql",
     "build": "convex deploy --cmd 'npm run build:web'",
     "build:web": "tsc -b && vite build",
     "lint": "tsc && eslint .  --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -38,9 +42,11 @@
     "react-router-dom": "^7.14.2",
     "sonner": "^2.0.7",
     "tailwind-merge": "^2.3.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260830.1",
     "@types/node": "^20.14.9",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
@@ -55,6 +61,7 @@
     "prettier": "3.6.2",
     "tailwindcss": "^3.4.4",
     "typescript": "^5.2.2",
-    "vite": "^5.3.1"
+    "vite": "^5.3.1",
+    "wrangler": "^4.127.1"
   }
 }
